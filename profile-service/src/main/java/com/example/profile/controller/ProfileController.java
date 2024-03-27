@@ -16,17 +16,17 @@ import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/profiles")
+@RequestMapping("/api/v1")
 public class ProfileController {
 
     private final ProfileService profileService;
 
-    @PostMapping
+    @PostMapping("/profile")
     public ResponseEntity<String> createProfile(@Valid @RequestBody CreateProfileRequest request) {
         return ResponseEntity.status(CREATED).body(profileService.createProfile(request));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/profile/{id}")
     public ResponseEntity<ProfileResponse> getProfile(@PathVariable String id) {
         return ResponseEntity.ok(profileService.getProfile(id));
     }
@@ -36,7 +36,7 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.getAuthProfile(loggedInUser));
     }
 
-    @GetMapping("/")
+    @GetMapping("/profiles")
     public ResponseEntity<PageResponse<ProfileResponse>> findAllByUsername(
             @RequestParam String username,
             Pageable pageable
@@ -45,7 +45,7 @@ public class ProfileController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/{id}")
+    @PutMapping("/profile/{id}")
     public ResponseEntity<ProfileResponse> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request,
             @PathVariable String id,
@@ -54,7 +54,7 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.updateProfile(id, request, loggedInUser));
     }
 
-    @GetMapping("/id/{email}")
+    @GetMapping("/profile/id/{email}")
     public ResponseEntity<String> getProfileIdByEmail(@PathVariable String email) {
         return ResponseEntity.ok(profileService.getProfileIdByEmail(email));
     }

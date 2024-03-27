@@ -45,6 +45,7 @@
         <wiremock.version>2.27.2</wiremock.version>
         <spring-cloud-starter-aws.version>2.2.6.RELEASE</spring-cloud-starter-aws.version>
         <gson.version>2.10.1</gson.version>
+        <instancio.version>4.5.0</instancio.version>
     </properties>
 
     <dependencyManagement>
@@ -75,6 +76,12 @@
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.instancio</groupId>
+                <artifactId>instancio-junit</artifactId>
+                <version>${instancio.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

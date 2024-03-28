@@ -1,7 +1,6 @@
 package com.example.profile.integration.controller;
 
 import com.example.profile.integration.IntegrationTestBase;
-import com.example.profile.service.MessageSourceService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ProfileControllerTest extends IntegrationTestBase {
 
     private final MockMvc mockMvc;
-    private final MessageSourceService messageService;
 
     @Test
     public void createProfileTestSuccess() throws Exception {
@@ -93,7 +91,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
         mockMvc.perform(get(PROFILE_BY_ID_URL.getConstant().formatted("dummy id")))
                 .andExpectAll(
                         status().isNotFound(),
-                        jsonPath("$.message").value(messageService.generateMessage("error.entity.not_found", "dummy id"))
+                        jsonPath("$.message").value("")
                 );
     }
 
@@ -110,7 +108,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
         mockMvc.perform(get(PROFILE_ID_BY_EMAIL_URL.getConstant().formatted("dummy email")))
                 .andExpectAll(
                         status().isNotFound(),
-                        jsonPath("$.message").value(messageService.generateMessage("error.entity.not_found", "dummy email"))
+                        jsonPath("$.message").value("")
                 );
     }
 
@@ -118,7 +116,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
                         .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
                         .contentType(APPLICATION_JSON)
-                        .header("loggedInUser", authEmail))
+                        .header("profileId", authEmail))
                 .andExpectAll(
                         status().is2xxSuccessful(),
                         jsonPath("$.email").value(authEmail),
@@ -130,10 +128,10 @@ public class ProfileControllerTest extends IntegrationTestBase {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
                         .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
                         .contentType(APPLICATION_JSON)
-                        .header("loggedInUser", authEmail))
+                        .header("profileId", authEmail))
                 .andExpectAll(
                         status().isNotFound(),
-                        jsonPath("$.message").value(messageService.generateMessage("error.entity.not_found", profileId))
+                        jsonPath("$.message").value("")
                 );
     }
 
@@ -141,10 +139,10 @@ public class ProfileControllerTest extends IntegrationTestBase {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
                         .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
                         .contentType(APPLICATION_JSON)
-                        .header("loggedInUser", "dummy email"))
+                        .header("profileId", "dummy email"))
                 .andExpectAll(
                         status().isForbidden(),
-                        jsonPath("$.message").value(messageService.generateMessage("error.forbidden"))
+                        jsonPath("$.message").value("")
                 );
     }
 

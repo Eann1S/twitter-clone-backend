@@ -56,27 +56,27 @@ public class FollowControllerTest extends IntegrationTestBase {
         getFolloweesExpectAmount(followerId, 0);
     }
 
-    private void isFollowedExpect(String followeeId, String loggedInUser, String expected) throws Exception {
+    private void isFollowedExpect(String followeeId, String profileId, String expected) throws Exception {
         mockMvc.perform(get(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("loggedInUser", loggedInUser))
+                        .header("profileId", profileId))
                 .andExpectAll(
                         status().is2xxSuccessful(),
                         content().string(expected)
                 );
     }
 
-    private void followExpect(String followeeId, String loggedInUser, String expected) throws Exception {
+    private void followExpect(String followeeId, String profileId, String expected) throws Exception {
         mockMvc.perform(post(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("loggedInUser", loggedInUser))
+                        .header("profileId", profileId))
                 .andExpectAll(
                         status().is2xxSuccessful(),
                         content().string(expected)
                 );
     }
 
-    private void unfollowExpect(String followeeId, String loggedInUser, String expected) throws Exception {
+    private void unfollowExpect(String followeeId, String profileId, String expected) throws Exception {
         mockMvc.perform(delete(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("loggedInUser", loggedInUser))
+                        .header("profileId", profileId))
                 .andExpectAll(
                         status().is2xxSuccessful(),
                         content().string(expected)

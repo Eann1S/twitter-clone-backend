@@ -1,6 +1,8 @@
-package com.example.profile.exception;
+package com.example.profile.exception.handler;
 
 import com.example.profile.dto.response.ErrorResponse;
+import com.example.profile.exception.ActionNotAllowedException;
+import com.example.profile.exception.EntityNotFoundException;
 import com.mongodb.MongoWriteException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,11 +34,6 @@ public class CustomExceptionHandler {
     @ExceptionHandler(MongoWriteException.class)
     public ResponseEntity<ErrorResponse> handleException(MongoWriteException e) {
         return generateDefaultErrorResponse(BAD_REQUEST, e);
-    }
-
-    @ExceptionHandler(CreateEntityException.class)
-    public ResponseEntity<ErrorResponse> handleException(CreateEntityException e) {
-        return generateDefaultErrorResponse(UNPROCESSABLE_ENTITY, e);
     }
 
     @ExceptionHandler(ActionNotAllowedException.class)

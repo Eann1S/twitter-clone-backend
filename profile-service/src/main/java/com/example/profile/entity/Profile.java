@@ -1,6 +1,5 @@
 package com.example.profile.entity;
 
-import com.mongodb.lang.NonNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,8 +21,8 @@ public class Profile implements BaseEntity<String> {
     private String id;
 
     @Indexed(unique = true) private String email;
-    @NonNull private String username;
-    @NonNull private LocalDate joinDate;
+    private String username;
+    private LocalDate joinDate;
 
     private String bio;
     private String location;

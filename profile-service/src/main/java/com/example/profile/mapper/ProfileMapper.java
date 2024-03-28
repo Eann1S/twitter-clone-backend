@@ -10,7 +10,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface ProfileMapper {
 
-    Profile toEntity(CreateProfileRequest createProfileRequest);
+    Profile toProfile(CreateProfileRequest createProfileRequest);
 
     @Mapping(target = "profileId", source = "id")
     @Mapping(target = "followees", expression = "java(followsUtil.countFolloweesForProfile(profile.getId()))")

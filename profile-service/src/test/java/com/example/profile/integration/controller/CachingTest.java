@@ -7,8 +7,8 @@ import com.example.profile.entity.Profile;
 import com.example.profile.integration.IntegrationTestBase;
 import com.example.profile.repository.FollowRepository;
 import com.example.profile.repository.ProfileRepository;
-import com.example.profile.service.FollowService;
-import com.example.profile.service.ProfileService;
+import com.example.profile.service.impl.FollowServiceImpl;
+import com.example.profile.service.impl.ProfileServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -33,8 +33,8 @@ import static org.mockito.Mockito.*;
 @SuppressWarnings("SameParameterValue")
 public class CachingTest extends IntegrationTestBase {
 
-    private final FollowService followService;
-    private final ProfileService profileService;
+    private final FollowServiceImpl followServiceImpl;
+    private final ProfileServiceImpl profileServiceImpl;
     @MockBean
     private final FollowRepository followRepository;
     @MockBean
@@ -44,8 +44,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheProfileTest() {
         createStubForProfile(ID.getConstant());
 
-        profileService.getProfile(ID.getConstant());
-        ProfileResponse profile = profileService.getProfile(ID.getConstant());
+        profileServiceImpl.getProfileById(ID.getConstant());
+        ProfileResponse profile = profileServiceImpl.getProfileById(ID.getConstant());
 
         verify(profileRepository, times(1)).findById(ID.getConstant());
 
@@ -58,11 +58,11 @@ public class CachingTest extends IntegrationTestBase {
     public void updateProfileInCacheTest() {
         createStubForProfile(ID.getConstant());
 
-        ProfileResponse profile = profileService.getProfile(ID.getConstant());
+        ProfileResponse profile = profileServiceImpl.getProfileById(ID.getConstant());
         ProfileResponse profileFromCache = getProfileFromCache(ID.getConstant());
         assertEquals(profile, profileFromCache);
 
-        ProfileResponse updatedProfile = profileService.updateProfile(ID.getConstant(), buildUpdateProfileRequest(), NEW_PROFILE_EMAIL.getConstant());
+        ProfileResponse updatedProfile = profileServiceImpl.updateProfile(ID.getConstant(), buildUpdateProfileRequest(), NEW_PROFILE_EMAIL.getConstant());
         profileFromCache = getProfileFromCache(ID.getConstant());
         assertEquals(updatedProfile, profileFromCache);
     }
@@ -71,8 +71,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheFollowersTest() {
         createStubForProfileWithFollowersAndFollowees(ID.getConstant(), 10000, 10, 0);
 
-        followService.getFollowers(ID.getConstant());
-        followService.getFollowers(ID.getConstant());
+        followServiceImpl.getFollowers(ID.getConstant());
+        followServiceImpl.getFollowers(ID.getConstant());
 
         verify(followRepository, times(1))
                 .findAllByFolloweeProfile_Id(ID.getConstant());
@@ -86,8 +86,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheFolloweesTest() {
         createStubForProfileWithFollowersAndFollowees(ID.getConstant(), 10, 1000, 0);
 
-        followService.getFollowees(ID.getConstant());
-        followService.getFollowees(ID.getConstant());
+        followServiceImpl.getFollowees(ID.getConstant());
+        followServiceImpl.getFollowees(ID.getConstant());
 
         verify(followRepository, times(1))
                 .findAllByFollowerProfile_Id(ID.getConstant());
@@ -101,8 +101,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheFolloweesCelebritiesTest() {
         createStubForProfileWithFollowersAndFollowees(ID.getConstant(), 10, 100, 50);
 
-        followService.getFolloweesCelebrities(ID.getConstant());
-        followService.getFolloweesCelebrities(ID.getConstant());
+        followServiceImpl.getFolloweesCelebrities(ID.getConstant());
+        followServiceImpl.getFolloweesCelebrities(ID.getConstant());
 
         verify(followRepository, times(1))
                 .findAllByFollowerProfile_Id(ID.getConstant());

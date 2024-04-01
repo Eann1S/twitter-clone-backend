@@ -1,7 +1,9 @@
-package com.example.profile.config;
+package com.example.profile.config.cache;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -13,26 +15,31 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 
 import java.time.Duration;
 
+@Getter
+@Setter
 @Configuration
-@RequiredArgsConstructor
-public class RedisConfig {
+@EnableConfigurationProperties
+@ConfigurationProperties(prefix = "spring.data.redis")
+public class CacheConfig {
 
-    @Value("${spring.data.redis.host}")
-    private String redisHost;
+    public static final String FOLLOWERS_CACHE = "followers";
+    public static final String FOLLOWEES_CACHE = "followees";
+    public static final String FOLLOWEES_CELEBRITIES_CACHE = "followees_celebrities";
 
-    @Value("${spring.data.redis.port}")
-    private String redisPort;
+    private static final Duration CACHE_TIME_TO_LIVE = Duration.ofHours(12);
+    private String host;
+    private String port;
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, Integer.parseInt(redisPort));
+        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, Integer.parseInt(port));
         return new JedisConnectionFactory(configuration);
     }
 
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(12))
+                .entryTtl(CACHE_TIME_TO_LIVE)
                 .disableCachingNullValues()
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
     }

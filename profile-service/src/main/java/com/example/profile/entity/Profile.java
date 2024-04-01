@@ -29,6 +29,4 @@ public class Profile implements BaseEntity<String> {
     private String website;
     private LocalDate birthDate;
 
-    private String avatarUrl;
-    private String bannerUrl;
 }

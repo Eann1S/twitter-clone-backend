@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.example.profile.constant.CacheName.*;
+import static com.example.profile.config.cache.CacheConfig.*;
 
 @Slf4j
 @Service

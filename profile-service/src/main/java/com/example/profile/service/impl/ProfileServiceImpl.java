@@ -8,16 +8,13 @@ import com.example.profile.exception.ActionNotAllowedException;
 import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
+import com.example.profile.service.CacheService;
 import com.example.profile.service.ProfileService;
 import com.example.profile.util.FollowsUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import static com.example.profile.constant.CacheName.PROFILES_CACHE;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +23,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
     private final FollowsUtil followsUtil;
+    private final CacheService cacheService;
 
     @Override
     public ProfileResponse createProfile(CreateProfileRequest createProfileRequest) {
@@ -35,20 +33,25 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    @Cacheable(cacheNames = PROFILES_CACHE, key = "#p0")
     public ProfileResponse getProfileById(String id) {
-        Profile profile = findProfileByIdInDatabase(id);
-        return profileMapper.toResponse(profile, followsUtil);
+        return cacheService.<ProfileResponse>getFromCache(id)
+                .orElseGet(() -> {
+                    Profile profile = findProfileByIdInDatabase(id);
+                    ProfileResponse response = profileMapper.toResponse(profile, followsUtil);
+                    cacheService.putInCache(id, response);
+                    return response;
+                });
     }
 
     @Override
-    @CachePut(cacheNames = PROFILES_CACHE, key = "#p0")
-    public ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String profileId) {
+    public ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String loggedInProfileId) {
         Profile profileToUpdate = findProfileByIdInDatabase(id);
-        validateThatProfileIsLoggedIn(profileId, profileToUpdate);
+        validateThatProfileIsLoggedIn(loggedInProfileId, profileToUpdate);
         Profile updatedProfile = profileMapper.updateProfileFromUpdateProfileRequest(updateProfileRequest, profileToUpdate);
         updatedProfile = profileRepository.save(updatedProfile);
-        return profileMapper.toResponse(updatedProfile, followsUtil);
+        ProfileResponse response = profileMapper.toResponse(updatedProfile, followsUtil);
+        cacheService.putInCache(id, response);
+        return response;
     }
 
     @Override

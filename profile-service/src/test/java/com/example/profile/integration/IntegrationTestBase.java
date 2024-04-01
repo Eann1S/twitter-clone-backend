@@ -1,10 +1,8 @@
 package com.example.profile.integration;
 
-import com.example.profile.client.StorageServiceClient;
 import com.example.profile.integration.annotation.IT;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -32,9 +30,6 @@ public class IntegrationTestBase {
             .waitingFor(Wait.forHttp("/profile-service/test")
                     .forStatusCodeMatching(port -> port >= 200 && port < 400));
 
-    @MockBean
-    @SuppressWarnings("unused")
-    private StorageServiceClient storageServiceClient;
     @Autowired
     protected CacheManager cacheManager;
 

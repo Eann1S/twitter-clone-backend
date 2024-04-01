@@ -35,6 +35,4 @@ public class ProfileResponse {
         @JsonDeserialize(using = LocalDateDeserializer.class)
         private LocalDate birthDate;
 
-        private String avatarUrl;
-        private String bannerUrl;
 }

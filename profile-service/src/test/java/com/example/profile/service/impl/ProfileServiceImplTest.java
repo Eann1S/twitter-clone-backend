@@ -7,6 +7,7 @@ import com.example.profile.entity.Profile;
 import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
+import com.example.profile.service.CacheService;
 import com.example.profile.util.FollowsUtil;
 import org.instancio.Instancio;
 import org.instancio.junit.InstancioExtension;
@@ -39,11 +40,13 @@ class ProfileServiceImplTest {
     private ProfileMapper profileMapper;
     @Mock
     private FollowsUtil followsUtil;
+    @Mock
+    private CacheService cacheService;
     private ProfileServiceImpl profileService;
 
     @BeforeEach
     void setUp() {
-        profileService = new ProfileServiceImpl(profileRepository, profileMapper, followsUtil);
+        profileService = new ProfileServiceImpl(profileRepository, profileMapper, followsUtil, cacheService);
     }
 
     @ParameterizedTest
@@ -56,23 +59,26 @@ class ProfileServiceImplTest {
         when(profileMapper.toResponse(profile, followsUtil))
                 .thenReturn(profileResponse);
 
-        ProfileResponse response = profileService.createProfile(request);
+        ProfileResponse actualResponse = profileService.createProfile(request);
 
         verify(profileRepository).save(profile);
-        assertThat(response).isEqualTo(profileResponse);
+        assertThat(actualResponse).isEqualTo(profileResponse);
     }
 
     @ParameterizedTest
     @InstancioSource
     void shouldReturnProfile(Profile profile, ProfileResponse profileResponse) {
+        when(cacheService.getFromCache(profile.getId()))
+                .thenReturn(Optional.empty());
         when(profileRepository.findById(profile.getId()))
                 .thenReturn(Optional.of(profile));
         when(profileMapper.toResponse(profile, followsUtil))
                 .thenReturn(profileResponse);
 
-        ProfileResponse response = profileService.getProfileById(profile.getId());
+        ProfileResponse actualResponse = profileService.getProfileById(profile.getId());
 
-        assertThat(response).isEqualTo(profileResponse);
+        assertThat(actualResponse).isEqualTo(profileResponse);
+        verify(cacheService).putInCache(profile.getId(), profileResponse);
     }
 
     @ParameterizedTest
@@ -87,9 +93,10 @@ class ProfileServiceImplTest {
         when(profileMapper.toResponse(profile, followsUtil))
                 .thenReturn(profileResponse);
 
-        ProfileResponse response = profileService.updateProfile(profile.getId(), request, profile.getId());
+        ProfileResponse actualResponse = profileService.updateProfile(profile.getId(), request, profile.getId());
 
-        assertThat(response).isEqualTo(profileResponse);
+        assertThat(actualResponse).isEqualTo(profileResponse);
+        verify(cacheService).putInCache(profile.getId(), profileResponse);
     }
 
     @ParameterizedTest
@@ -104,9 +111,9 @@ class ProfileServiceImplTest {
         when(profileMapper.toResponse(any(Profile.class), any()))
                 .thenReturn(profileResponses.get(0), profileResponses.get(1), profileResponses.get(2));
 
-        Page<ProfileResponse> response = profileService.getProfilesByUsername(username, pageRequest);
+        Page<ProfileResponse> actualResponse = profileService.getProfilesByUsername(username, pageRequest);
 
-        assertThat(response).containsExactlyInAnyOrderElementsOf(profileResponses);
+        assertThat(actualResponse).containsExactlyInAnyOrderElementsOf(profileResponses);
     }
 
     @ParameterizedTest
@@ -126,8 +133,8 @@ class ProfileServiceImplTest {
         when(profileRepository.findByUsernameContaining(username, pageRequest))
                 .thenReturn(Page.empty(pageRequest));
 
-        Page<ProfileResponse> response = profileService.getProfilesByUsername(username, pageRequest);
+        Page<ProfileResponse> actualResponse = profileService.getProfilesByUsername(username, pageRequest);
 
-        assertThat(response).isEmpty();
+        assertThat(actualResponse).isEmpty();
     }
 }

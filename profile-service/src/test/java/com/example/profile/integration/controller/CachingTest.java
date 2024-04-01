@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.example.profile.constant.CacheName.*;
+import static com.example.profile.config.cache.CacheConfig.*;
 import static com.example.profile.integration.constants.ProfileConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

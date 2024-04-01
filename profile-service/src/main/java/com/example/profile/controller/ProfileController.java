@@ -39,7 +39,7 @@ public class ProfileController {
         return ResponseEntity.ok(page);
     }
 
-    @PutMapping("/profile/{id}")
+    @PutMapping("/profile/{id}/update")
     public ResponseEntity<ProfileResponse> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request,
             @PathVariable String id,

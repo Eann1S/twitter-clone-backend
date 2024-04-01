@@ -10,6 +10,6 @@ public interface ProfileService {
 
     ProfileResponse createProfile(CreateProfileRequest createProfileRequest);
     ProfileResponse getProfileById(String id);
-    ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String profileId);
+    ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String loggedInProfileId);
     Page<ProfileResponse> getProfilesByUsername(String username, Pageable pageable);
 }

@@ -47,11 +47,7 @@ public class CustomExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> generateDefaultErrorResponse(HttpStatus status, Exception e) {
-        ErrorResponse error = ErrorResponse.builder()
-                .code(status.value())
-                .message(e.getMessage())
-                .timestamp(System.currentTimeMillis())
-                .build();
+        ErrorResponse error = new ErrorResponse(e.getMessage());
 
         return new ResponseEntity<>(error, status);
     }

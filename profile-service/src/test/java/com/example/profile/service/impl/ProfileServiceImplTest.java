@@ -8,7 +8,6 @@ import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.CacheService;
-import com.example.profile.util.FollowsUtil;
 import org.instancio.Instancio;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
@@ -39,14 +38,12 @@ class ProfileServiceImplTest {
     @Mock
     private ProfileMapper profileMapper;
     @Mock
-    private FollowsUtil followsUtil;
-    @Mock
     private CacheService cacheService;
     private ProfileServiceImpl profileService;
 
     @BeforeEach
     void setUp() {
-        profileService = new ProfileServiceImpl(profileRepository, profileMapper, followsUtil, cacheService);
+        profileService = new ProfileServiceImpl(profileRepository, profileMapper, cacheService);
     }
 
     @ParameterizedTest
@@ -56,7 +53,7 @@ class ProfileServiceImplTest {
                 .thenReturn(profile);
         when(profileRepository.save(profile))
                 .thenReturn(profile);
-        when(profileMapper.toResponse(profile, followsUtil))
+        when(profileMapper.toResponse(profile))
                 .thenReturn(profileResponse);
 
         ProfileResponse actualResponse = profileService.createProfile(request);
@@ -72,7 +69,7 @@ class ProfileServiceImplTest {
                 .thenReturn(Optional.empty());
         when(profileRepository.findById(profile.getId()))
                 .thenReturn(Optional.of(profile));
-        when(profileMapper.toResponse(profile, followsUtil))
+        when(profileMapper.toResponse(profile))
                 .thenReturn(profileResponse);
 
         ProfileResponse actualResponse = profileService.getProfileById(profile.getId());
@@ -90,7 +87,7 @@ class ProfileServiceImplTest {
                 .thenReturn(profile);
         when(profileMapper.updateProfileFromUpdateProfileRequest(request, profile))
                 .thenReturn(profile);
-        when(profileMapper.toResponse(profile, followsUtil))
+        when(profileMapper.toResponse(profile))
                 .thenReturn(profileResponse);
 
         ProfileResponse actualResponse = profileService.updateProfile(profile.getId(), request, profile.getId());
@@ -108,7 +105,7 @@ class ProfileServiceImplTest {
                 .size(3).create();
         when(profileRepository.findByUsernameContaining(username, pageRequest))
                 .thenReturn(new PageImpl<>(profiles));
-        when(profileMapper.toResponse(any(Profile.class), any()))
+        when(profileMapper.toResponse(any(Profile.class)))
                 .thenReturn(profileResponses.get(0), profileResponses.get(1), profileResponses.get(2));
 
         Page<ProfileResponse> actualResponse = profileService.getProfilesByUsername(username, pageRequest);

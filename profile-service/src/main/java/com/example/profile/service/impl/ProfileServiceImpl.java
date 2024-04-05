@@ -10,7 +10,6 @@ import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.CacheService;
 import com.example.profile.service.ProfileService;
-import com.example.profile.util.FollowsUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,14 +21,13 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
-    private final FollowsUtil followsUtil;
     private final CacheService cacheService;
 
     @Override
     public ProfileResponse createProfile(CreateProfileRequest createProfileRequest) {
         Profile profile = profileMapper.toProfile(createProfileRequest);
         profile = profileRepository.save(profile);
-        return profileMapper.toResponse(profile, followsUtil);
+        return profileMapper.toResponse(profile);
     }
 
     @Override
@@ -37,7 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
         return cacheService.<ProfileResponse>getFromCache(id)
                 .orElseGet(() -> {
                     Profile profile = findProfileByIdInDatabase(id);
-                    ProfileResponse response = profileMapper.toResponse(profile, followsUtil);
+                    ProfileResponse response = profileMapper.toResponse(profile);
                     cacheService.putInCache(id, response);
                     return response;
                 });
@@ -49,7 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
         validateThatProfileIsLoggedIn(loggedInProfileId, profileToUpdate);
         Profile updatedProfile = profileMapper.updateProfileFromUpdateProfileRequest(updateProfileRequest, profileToUpdate);
         updatedProfile = profileRepository.save(updatedProfile);
-        ProfileResponse response = profileMapper.toResponse(updatedProfile, followsUtil);
+        ProfileResponse response = profileMapper.toResponse(updatedProfile);
         cacheService.putInCache(id, response);
         return response;
     }
@@ -57,7 +55,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public Page<ProfileResponse> getProfilesByUsername(String username, Pageable pageable) {
         Page<Profile> profiles = findProfilesByUsernameInDatabase(username, pageable);
-        return profiles.map(profile -> profileMapper.toResponse(profile, followsUtil));
+        return profiles.map(profileMapper::toResponse);
     }
 
     private Page<Profile> findProfilesByUsernameInDatabase(String username, Pageable pageable) {

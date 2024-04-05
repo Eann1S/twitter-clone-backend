@@ -7,7 +7,6 @@ import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.FollowRepository;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.FollowService;
-import com.example.profile.util.FollowsUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -29,7 +28,6 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
-    private final FollowsUtil followsUtil;
     private final CacheManager cacheManager;
 
     public boolean follow(String followeeId, String profileId) {
@@ -63,7 +61,7 @@ public class FollowServiceImpl implements FollowService {
         return followRepository.findAllByFolloweeProfile_Id(profileId)
                 .stream()
                 .map(Follow::getFollowerProfile)
-                .map(profile -> profileMapper.toResponse(profile, followsUtil))
+                .map(profileMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -72,7 +70,7 @@ public class FollowServiceImpl implements FollowService {
         return followRepository.findAllByFollowerProfile_Id(profileId)
                 .stream()
                 .map(Follow::getFolloweeProfile)
-                .map(profile -> profileMapper.toResponse(profile, followsUtil))
+                .map(profileMapper::toResponse)
                 .collect(Collectors.toList());
     }
 

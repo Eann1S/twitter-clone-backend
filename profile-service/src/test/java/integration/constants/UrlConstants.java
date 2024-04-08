@@ -1,4 +1,4 @@
-package com.example.profile.integration.constants;
+package integration.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

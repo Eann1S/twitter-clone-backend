@@ -1,13 +1,13 @@
-package com.example.profile.integration.controller;
+package integration.controller;
 
-import com.example.profile.integration.IntegrationTestBase;
+import integration.IntegrationTestBase;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.example.profile.integration.constants.ProfileConstants.*;
-import static com.example.profile.integration.constants.UrlConstants.*;
+import static integration.constants.ProfileConstants.*;
+import static integration.constants.UrlConstants.*;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;

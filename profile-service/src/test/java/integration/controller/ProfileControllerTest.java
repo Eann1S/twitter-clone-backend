@@ -1,6 +1,6 @@
-package com.example.profile.integration.controller;
+package integration.controller;
 
-import com.example.profile.integration.IntegrationTestBase;
+import integration.IntegrationTestBase;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,9 +8,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-import static com.example.profile.integration.constants.JsonConstants.*;
-import static com.example.profile.integration.constants.ProfileConstants.*;
-import static com.example.profile.integration.constants.UrlConstants.*;
+import static integration.constants.JsonConstants.*;
+import static integration.constants.ProfileConstants.*;
+import static integration.constants.UrlConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;

@@ -13,9 +13,7 @@ import com.example.profile.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 
@@ -31,10 +29,10 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public ProfileResponse getProfileById(String id) {
+    public ProfileResponse getProfileResponseById(String id) {
         return cacheService.<ProfileResponse>getFromCache(id)
                 .orElseGet(() -> {
-                    Profile profile = findProfileByIdInDatabase(id);
+                    Profile profile = findProfileById(id);
                     ProfileResponse response = profileMapper.toResponse(profile);
                     cacheService.putInCache(id, response);
                     return response;
@@ -43,7 +41,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String loggedInProfileId) {
-        Profile profileToUpdate = findProfileByIdInDatabase(id);
+        Profile profileToUpdate = findProfileById(id);
         validateThatProfileIsLoggedIn(loggedInProfileId, profileToUpdate);
         Profile updatedProfile = profileMapper.updateProfileFromUpdateProfileRequest(updateProfileRequest, profileToUpdate);
         updatedProfile = profileRepository.save(updatedProfile);
@@ -53,18 +51,19 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Page<ProfileResponse> getProfilesByUsername(String username, Pageable pageable) {
-        Page<Profile> profiles = findProfilesByUsernameInDatabase(username, pageable);
+    public Page<ProfileResponse> getProfileResponsesByUsername(String username, Pageable pageable) {
+        Page<Profile> profiles = findProfilesByUsername(username, pageable);
         return profiles.map(profileMapper::toResponse);
     }
 
-    private Page<Profile> findProfilesByUsernameInDatabase(String username, Pageable pageable) {
-        return profileRepository.findByUsernameContaining(username, pageable);
+    @Override
+    public Profile findProfileById(String profileId) {
+        return profileRepository.findById(profileId)
+                .orElseThrow(() -> new EntityNotFoundException(profileId));
     }
 
-    private Profile findProfileByIdInDatabase(String id) {
-        return profileRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(id));
+    private Page<Profile> findProfilesByUsername(String username, Pageable pageable) {
+        return profileRepository.findByUsernameContaining(username, pageable);
     }
 
     private void validateThatProfileIsLoggedIn(String profileId, Profile loggedInProfile) {

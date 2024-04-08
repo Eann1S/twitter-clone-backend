@@ -27,7 +27,7 @@ public class ProfileController {
 
     @GetMapping("/profile/{id}")
     public ResponseEntity<ProfileResponse> getProfile(@PathVariable String id) {
-        return ResponseEntity.ok(profileService.getProfileById(id));
+        return ResponseEntity.ok(profileService.getProfileResponseById(id));
     }
 
     @GetMapping("/profiles")
@@ -35,7 +35,7 @@ public class ProfileController {
             @RequestParam String username,
             Pageable pageable
     ) {
-        Page<ProfileResponse> page = profileService.getProfilesByUsername(username, pageable);
+        Page<ProfileResponse> page = profileService.getProfileResponsesByUsername(username, pageable);
         return ResponseEntity.ok(page);
     }
 

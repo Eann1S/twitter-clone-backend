@@ -1,10 +1,10 @@
-package com.example.profile.integration.constants;
+package integration.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
 
-import static com.example.profile.integration.constants.ProfileConstants.*;
+import static integration.constants.ProfileConstants.*;
 
 @Getter
 @ToString

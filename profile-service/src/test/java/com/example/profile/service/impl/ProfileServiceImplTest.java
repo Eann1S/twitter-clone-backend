@@ -8,7 +8,6 @@ import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.CacheService;
-import org.instancio.Instancio;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,6 @@ import java.util.Optional;
 import static com.example.profile.message.ErrorMessage.ENTITY_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -64,7 +62,7 @@ class ProfileServiceImplTest {
 
     @ParameterizedTest
     @InstancioSource
-    void shouldReturnProfile(Profile profile, ProfileResponse profileResponse) {
+    void shouldReturnProfileResponseById(Profile profile, ProfileResponse profileResponse) {
         when(cacheService.getFromCache(profile.getId()))
                 .thenReturn(Optional.empty());
         when(profileRepository.findById(profile.getId()))
@@ -72,7 +70,7 @@ class ProfileServiceImplTest {
         when(profileMapper.toResponse(profile))
                 .thenReturn(profileResponse);
 
-        ProfileResponse actualResponse = profileService.getProfileById(profile.getId());
+        ProfileResponse actualResponse = profileService.getProfileResponseById(profile.getId());
 
         assertThat(actualResponse).isEqualTo(profileResponse);
         verify(cacheService).putInCache(profile.getId(), profileResponse);
@@ -98,19 +96,15 @@ class ProfileServiceImplTest {
 
     @ParameterizedTest
     @InstancioSource
-    void shouldReturnProfilesByUsername(String username, PageRequest pageRequest) {
-        List<Profile> profiles = Instancio.ofList(Profile.class)
-                .size(3).create();
-        List<ProfileResponse> profileResponses = Instancio.ofList(ProfileResponse.class)
-                .size(3).create();
-        when(profileRepository.findByUsernameContaining(username, pageRequest))
-                .thenReturn(new PageImpl<>(profiles));
-        when(profileMapper.toResponse(any(Profile.class)))
-                .thenReturn(profileResponses.get(0), profileResponses.get(1), profileResponses.get(2));
+    void shouldReturnProfilesByUsername(Profile profile, ProfileResponse profileResponse, PageRequest pageRequest) {
+        when(profileRepository.findByUsernameContaining(profile.getUsername(), pageRequest))
+                .thenReturn(new PageImpl<>(List.of(profile)));
+        when(profileMapper.toResponse(profile))
+                .thenReturn(profileResponse);
 
-        Page<ProfileResponse> actualResponse = profileService.getProfilesByUsername(username, pageRequest);
+        Page<ProfileResponse> actualResponse = profileService.getProfileResponsesByUsername(profile.getUsername(), pageRequest);
 
-        assertThat(actualResponse).containsExactlyInAnyOrderElementsOf(profileResponses);
+        assertThat(actualResponse).containsExactly(profileResponse);
     }
 
     @ParameterizedTest
@@ -119,7 +113,7 @@ class ProfileServiceImplTest {
         when(profileRepository.findById(profile.getId()))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> profileService.getProfileById(profile.getId()))
+        assertThatThrownBy(() -> profileService.getProfileResponseById(profile.getId()))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage(ENTITY_NOT_FOUND.formatWith(profile.getId()));
     }
@@ -130,7 +124,7 @@ class ProfileServiceImplTest {
         when(profileRepository.findByUsernameContaining(username, pageRequest))
                 .thenReturn(Page.empty(pageRequest));
 
-        Page<ProfileResponse> actualResponse = profileService.getProfilesByUsername(username, pageRequest);
+        Page<ProfileResponse> actualResponse = profileService.getProfileResponsesByUsername(username, pageRequest);
 
         assertThat(actualResponse).isEmpty();
     }

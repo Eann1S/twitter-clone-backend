@@ -5,12 +5,11 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface FollowRepository extends MongoRepository<Follow, String> {
 
-    Optional<Follow> deleteByFollowerProfile_IdAndFolloweeProfile_Id(String followerId, String followeeId);
+    void deleteByFollowerProfile_IdAndFolloweeProfile_Id(String followerId, String followeeId);
 
     boolean existsByFollowerProfile_IdAndFolloweeProfile_Id(String followerId, String followeeId);
 

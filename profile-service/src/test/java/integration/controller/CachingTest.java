@@ -1,14 +1,14 @@
-package com.example.profile.integration.controller;
+package integration.controller;
 
 import com.example.profile.dto.request.UpdateProfileRequest;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Follow;
 import com.example.profile.entity.Profile;
-import com.example.profile.integration.IntegrationTestBase;
 import com.example.profile.repository.FollowRepository;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.impl.FollowServiceImpl;
 import com.example.profile.service.impl.ProfileServiceImpl;
+import integration.IntegrationTestBase;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.example.profile.config.cache.CacheConfig.*;
-import static com.example.profile.integration.constants.ProfileConstants.*;
+import static integration.constants.ProfileConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -44,8 +44,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheProfileTest() {
         createStubForProfile(ID.getConstant());
 
-        profileServiceImpl.getProfileById(ID.getConstant());
-        ProfileResponse profile = profileServiceImpl.getProfileById(ID.getConstant());
+        profileServiceImpl.getProfileResponseById(ID.getConstant());
+        ProfileResponse profile = profileServiceImpl.getProfileResponseById(ID.getConstant());
 
         verify(profileRepository, times(1)).findById(ID.getConstant());
 
@@ -58,7 +58,7 @@ public class CachingTest extends IntegrationTestBase {
     public void updateProfileInCacheTest() {
         createStubForProfile(ID.getConstant());
 
-        ProfileResponse profile = profileServiceImpl.getProfileById(ID.getConstant());
+        ProfileResponse profile = profileServiceImpl.getProfileResponseById(ID.getConstant());
         ProfileResponse profileFromCache = getProfileFromCache(ID.getConstant());
         assertEquals(profile, profileFromCache);
 

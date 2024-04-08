@@ -9,7 +9,6 @@ import com.example.profile.mapper.qualifier.followers.FollowersCountQualifier;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.Mock;
@@ -54,11 +53,11 @@ class ProfileMapperTest {
 
         assertThat(response)
                 .extracting(
-                        ProfileResponse::getProfileId,
-                        ProfileResponse::getUsername,
-                        ProfileResponse::getEmail,
-                        ProfileResponse::getFollowees,
-                        ProfileResponse::getFollowers
+                        ProfileResponse::profileId,
+                        ProfileResponse::username,
+                        ProfileResponse::email,
+                        ProfileResponse::followees,
+                        ProfileResponse::followers
                 ).containsExactly(
                         profile.getId(),
                         profile.getUsername(),

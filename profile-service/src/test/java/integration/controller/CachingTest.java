@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDate;
@@ -71,8 +72,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheFollowersTest() {
         createStubForProfileWithFollowersAndFollowees(ID.getConstant(), 10000, 10, 0);
 
-        followServiceImpl.getFollowers(ID.getConstant());
-        followServiceImpl.getFollowers(ID.getConstant());
+        followServiceImpl.getFollowers(ID.getConstant(), null);
+        followServiceImpl.getFollowers(ID.getConstant(), null);
 
         verify(followRepository, times(1))
                 .findAllByFolloweeProfile_Id(ID.getConstant());
@@ -86,8 +87,8 @@ public class CachingTest extends IntegrationTestBase {
     public void cacheFolloweesTest() {
         createStubForProfileWithFollowersAndFollowees(ID.getConstant(), 10, 1000, 0);
 
-        followServiceImpl.getFollowees(ID.getConstant());
-        followServiceImpl.getFollowees(ID.getConstant());
+        followServiceImpl.getFollowees(ID.getConstant(), null);
+        followServiceImpl.getFollowees(ID.getConstant(), null);
 
         verify(followRepository, times(1))
                 .findAllByFollowerProfile_Id(ID.getConstant());
@@ -125,7 +126,7 @@ public class CachingTest extends IntegrationTestBase {
         Stream<Follow> mockStreamOfFollows = mock(Stream.class);
 
         when(followRepository.findAllByFolloweeProfile_Id(parentProfile.getId()))
-                .thenReturn(followersListFromDb);
+                .thenReturn(new PageImpl<>(followersListFromDb));
 
         when(followersListFromDb.stream())
                 .thenReturn(mockStreamOfFollows);
@@ -147,7 +148,7 @@ public class CachingTest extends IntegrationTestBase {
         Stream<Follow> mockStreamOfFollows = mock(Stream.class);
 
         when(followRepository.findAllByFollowerProfile_Id(parentProfile.getId()))
-                .thenReturn(followeesListFromDb);
+                .thenReturn(new PageImpl<>(followeesListFromDb));
 
         when(followeesListFromDb.stream())
                 .thenReturn(mockStreamOfFollows);

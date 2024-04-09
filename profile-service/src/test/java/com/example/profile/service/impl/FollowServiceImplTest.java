@@ -15,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -84,12 +87,12 @@ class FollowServiceImplTest {
     void shouldReturnFollowers(Profile followee, Profile follower, ProfileResponse followerResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
         when(followRepository.findAllByFolloweeProfile_Id(followee.getId()))
-                .thenReturn(List.of(follow));
+                .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(follower))
                 .thenReturn(followerResponse);
 
 
-        List<ProfileResponse> followers = followService.getFollowers(followee.getId());
+        Page<ProfileResponse> followers = followService.getFollowers(followee.getId(), Pageable.unpaged());
 
         assertThat(followers).containsExactly(followerResponse);
     }
@@ -99,11 +102,11 @@ class FollowServiceImplTest {
     void shouldReturnFollowees(Profile followee, Profile follower, ProfileResponse followeeResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
         when(followRepository.findAllByFollowerProfile_Id(follower.getId()))
-                .thenReturn(List.of(follow));
+                .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(followee))
                 .thenReturn(followeeResponse);
 
-        List<ProfileResponse> followees = followService.getFollowees(follower.getId());
+        Page<ProfileResponse> followees = followService.getFollowees(follower.getId(), Pageable.unpaged());
 
         assertThat(followees).containsExactly(followeeResponse);
     }
@@ -116,11 +119,11 @@ class FollowServiceImplTest {
                 .create();
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
         when(followRepository.findAllByFollowerProfile_Id(follower.getId()))
-                .thenReturn(List.of(follow));
+                .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(followee))
                 .thenReturn(followeeResponse);
 
-        List<ProfileResponse> followeesCelebrities = followService.getFolloweesCelebrities(follower.getId());
+        Page<ProfileResponse> followeesCelebrities = followService.getFolloweesCelebrities(follower.getId());
 
         assertThat(followeesCelebrities).containsExactly(followeeResponse);
     }

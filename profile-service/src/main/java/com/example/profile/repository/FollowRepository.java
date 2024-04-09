@@ -1,10 +1,9 @@
 package com.example.profile.repository;
 
 import com.example.profile.entity.Follow;
+import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface FollowRepository extends MongoRepository<Follow, String> {
@@ -13,9 +12,9 @@ public interface FollowRepository extends MongoRepository<Follow, String> {
 
     boolean existsByFollowerProfile_IdAndFolloweeProfile_Id(String followerId, String followeeId);
 
-    List<Follow> findAllByFollowerProfile_Id(String followerId);
+    Page<Follow> findAllByFollowerProfile_Id(String followerId);
 
-    List<Follow> findAllByFolloweeProfile_Id(String followeeId);
+    Page<Follow> findAllByFolloweeProfile_Id(String followeeId);
 
     Integer countAllByFollowerProfile_Id(String followerId);
 

@@ -9,11 +9,14 @@ import com.example.profile.service.FollowService;
 import com.example.profile.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
 
 @Slf4j
@@ -56,28 +59,28 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<ProfileResponse> getFollowers(String profileId) {
+    public Page<ProfileResponse> getFollowers(String profileId, Pageable pageable) {
         return followRepository.findAllByFolloweeProfile_Id(profileId)
                 .stream()
                 .map(Follow::getFollowerProfile)
                 .map(profileMapper::toResponse)
-                .collect(toList());
+                .collect(collectingAndThen(toList(), PageImpl::new));
     }
 
     @Override
-    public List<ProfileResponse> getFollowees(String profileId) {
+    public Page<ProfileResponse> getFollowees(String profileId, Pageable pageable) {
         return followRepository.findAllByFollowerProfile_Id(profileId)
                 .stream()
                 .map(Follow::getFolloweeProfile)
                 .map(profileMapper::toResponse)
-                .collect(toList());
+                .collect(collectingAndThen(toList(), PageImpl::new));
     }
 
     @Override
-    public List<ProfileResponse> getFolloweesCelebrities(String profileId) {
-        return getFollowees(profileId)
+    public Page<ProfileResponse> getFolloweesCelebrities(String profileId) {
+        return getFollowees(profileId, Pageable.unpaged())
                 .stream()
                 .filter(profile -> profile.followers() > CELEBRITY_FOLLOWERS_THRESHOLD)
-                .collect(toList());
+                .collect(collectingAndThen(toList(), PageImpl::new));
     }
 }

@@ -3,10 +3,10 @@ package com.example.profile.controller;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.service.impl.FollowServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,17 +31,17 @@ public class FollowController {
     }
 
     @GetMapping("/followers/{profileId}")
-    public ResponseEntity<List<ProfileResponse>> getFollowers(@PathVariable String profileId) {
-        return ResponseEntity.ok(followServiceImpl.getFollowers(profileId));
+    public ResponseEntity<Page<ProfileResponse>> getFollowers(@PathVariable String profileId, Pageable pageable) {
+        return ResponseEntity.ok(followServiceImpl.getFollowers(profileId, pageable));
     }
 
     @GetMapping("/followees/{profileId}")
-    public ResponseEntity<List<ProfileResponse>> getFollowees(@PathVariable String profileId) {
-        return ResponseEntity.ok(followServiceImpl.getFollowees(profileId));
+    public ResponseEntity<Page<ProfileResponse>> getFollowees(@PathVariable String profileId, Pageable pageable) {
+        return ResponseEntity.ok(followServiceImpl.getFollowees(profileId, pageable));
     }
 
     @GetMapping("/followees-celebrities/{profileId}")
-    public ResponseEntity<List<ProfileResponse>> getFolloweesCelebrities(@PathVariable String profileId) {
+    public ResponseEntity<Page<ProfileResponse>> getFolloweesCelebrities(@PathVariable String profileId) {
         return ResponseEntity.ok(followServiceImpl.getFolloweesCelebrities(profileId));
     }
 }

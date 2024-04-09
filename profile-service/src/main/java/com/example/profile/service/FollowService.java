@@ -1,8 +1,8 @@
 package com.example.profile.service;
 
 import com.example.profile.dto.response.ProfileResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface FollowService {
 
@@ -14,9 +14,9 @@ public interface FollowService {
 
     boolean isFollowed(String followeeId, String profileId);
 
-    List<ProfileResponse> getFollowers(String profileId);
+    Page<ProfileResponse> getFollowers(String profileId, Pageable pageable);
 
-    List<ProfileResponse> getFollowees(String profileId);
+    Page<ProfileResponse> getFollowees(String profileId, Pageable pageable);
 
-    List<ProfileResponse> getFolloweesCelebrities(String profileId);
+    Page<ProfileResponse> getFolloweesCelebrities(String profileId);
 }

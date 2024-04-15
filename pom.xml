@@ -111,6 +111,9 @@
                     </from>
                     <to>
                         <image>registry.hub.docker.com/twitterclone0/twitter-${project.artifactId}:${project.version}</image>
+                        <tags>
+                            <tag>latest</tag>
+                        </tags>
                     </to>
                 </configuration>
             </plugin>

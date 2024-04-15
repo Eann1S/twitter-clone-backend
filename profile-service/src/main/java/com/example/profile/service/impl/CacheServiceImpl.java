@@ -1,20 +1,23 @@
-package com.example.profile.service.abstr;
+package com.example.profile.service.impl;
 
 import com.example.profile.service.CacheService;
 import com.google.gson.reflect.TypeToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
+import org.springframework.lang.Nullable;
 
 import java.util.Optional;
 
 import static com.example.profile.config.gson.GsonConfig.GSON;
 
-public abstract class AbstractCacheService implements CacheService {
+@RequiredArgsConstructor
+public class CacheServiceImpl implements CacheService {
 
-    protected abstract Cache getCache();
+    @Nullable
+    private final Cache cache;
 
     @Override
     public <T> Optional<T> getFromCache(String key) {
-        Cache cache = getCache();
         if (cache != null) {
             String jsonValue = cache.get(key, String.class);
             T value = GSON.fromJson(jsonValue, new TypeToken<>() {});
@@ -26,7 +29,6 @@ public abstract class AbstractCacheService implements CacheService {
 
     @Override
     public <T> void putInCache(String key, T value) {
-        Cache cache = getCache();
         if (cache != null) {
             String json = GSON.toJson(value);
             cache.put(key, json);
@@ -35,7 +37,6 @@ public abstract class AbstractCacheService implements CacheService {
 
     @Override
     public void evictFromCache(String key) {
-        Cache cache = getCache();
         if (cache != null) {
             cache.evict(key);
         }

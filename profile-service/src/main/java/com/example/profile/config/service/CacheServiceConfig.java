@@ -1,23 +1,20 @@
-package com.example.profile.config.cache;
+package com.example.profile.config.service;
 
+import com.example.profile.service.CacheService;
+import com.example.profile.service.impl.CacheServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-public class CacheConfig {
-
-    static final String PROFILES_CACHE = "profiles";
-
-    private final CacheManager cacheManager;
+public class CacheServiceConfig {
 
     @Bean
     @Qualifier("profiles")
-    public Cache profilesCache() {
-        return cacheManager.getCache(PROFILES_CACHE);
+    public CacheService profilesCacheService(@Qualifier("profiles") Cache cache) {
+        return new CacheServiceImpl(cache);
     }
 }

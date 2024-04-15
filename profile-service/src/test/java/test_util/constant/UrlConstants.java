@@ -1,4 +1,4 @@
-package integration.constants;
+package test_util.constant;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

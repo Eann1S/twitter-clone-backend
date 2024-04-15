@@ -1,6 +1,5 @@
-package com.example.profile.service.abstr;
+package com.example.profile.service.impl;
 
-import lombok.RequiredArgsConstructor;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,52 +17,41 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class, InstancioExtension.class})
-class AbstractCacheServiceTest {
+class CacheServiceImplTest {
 
     @Mock
     private Cache cache;
-    private AbstractCacheService abstractCacheService;
+    private CacheServiceImpl cacheService;
 
     @BeforeEach
     void setUp() {
-        abstractCacheService = new TestCacheService(cache);
+        cacheService = new CacheServiceImpl(cache);
     }
 
     @ParameterizedTest
     @InstancioSource
-    void getFromCache(String key, String value) {
+    void shouldReturnFromCache(String key, String value) {
         when(cache.get(key, String.class))
                 .thenReturn(value);
 
-        Optional<String> actualValue = abstractCacheService.getFromCache(key);
+        Optional<String> result = cacheService.getFromCache(key);
 
-        assertThat(actualValue).contains(value);
+        assertThat(result).contains(value);
     }
 
     @ParameterizedTest
     @InstancioSource
-    void putInCache(String key, String value) {
-        abstractCacheService.putInCache(key, value);
+    void shouldPutInCache(String key, String value) {
+        cacheService.putInCache(key, value);
 
         verify(cache).put(key, GSON.toJson(value));
     }
 
     @ParameterizedTest
     @InstancioSource
-    void evictFromCache(String key) {
-        abstractCacheService.evictFromCache(key);
+    void shouldEvictFromCache(String key) {
+        cacheService.evictFromCache(key);
 
         verify(cache).evict(key);
-    }
-
-    @RequiredArgsConstructor
-    static class TestCacheService extends AbstractCacheService {
-
-        private final Cache cache;
-
-        @Override
-        protected Cache getCache() {
-            return cache;
-        }
     }
 }

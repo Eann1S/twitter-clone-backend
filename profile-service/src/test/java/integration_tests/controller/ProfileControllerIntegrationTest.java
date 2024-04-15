@@ -1,53 +1,66 @@
-package integration.controller;
+package integration_tests.controller;
 
-import integration.IntegrationTestBase;
+import com.example.profile.ProfileServiceApplication;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import test_util.starter.AllServicesStarter;
 
-import static integration.constants.JsonConstants.*;
-import static integration.constants.ProfileConstants.*;
-import static integration.constants.UrlConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static test_util.constant.UrlConstants.*;
 
+@SpringBootTest(classes = ProfileServiceApplication.class)
 @AutoConfigureMockMvc
 @RequiredArgsConstructor
-public class ProfileControllerTest extends IntegrationTestBase {
+public class ProfileControllerIntegrationTest implements AllServicesStarter {
 
-    private final MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private CacheManager cacheManager;
+
+    @BeforeEach
+    @SuppressWarnings("DataFlowIssue")
+    public void setUp() {
+        cacheManager.getCache("profiles").clear();
+    }
 
     @Test
     public void createProfileTestSuccess() throws Exception {
-        String profileId = createProfileSuccess(NEW_PROFILE_JSON.getConstant());
+        String profileId = createProfileSuccess("NEW_PROFILE_JSON.getConstant()");
         String email = getProfileByIdSuccess(profileId, "/email");
-        assertThat(email).isEqualTo(NEW_PROFILE_EMAIL.getConstant());
-        getProfileByEmailSuccess(NEW_PROFILE_EMAIL.getConstant());
+        assertThat(email).isEqualTo("NEW_PROFILE_EMAIL.getConstant()");
+        getProfileByEmailSuccess("NEW_PROFILE_EMAIL.getConstant()");
     }
 
     @Test
     public void createProfileTestFailure() throws Exception {
-        createProfileSuccess(EXISTENT_PROFILE_JSON.getConstant());
-        createProfileFailure(EXISTENT_PROFILE_JSON.getConstant());
+        createProfileSuccess("EXISTENT_PROFILE_JSON.getConstant()");
+        createProfileFailure("EXISTENT_PROFILE_JSON.getConstant()");
         getProfileByIdFailure();
         getProfileByEmailFailure();
     }
 
     @Test
     public void updateProfileTestFailure() throws Exception {
-        updateProfileNotFound("dummy profile id", "new username", UPDATE_PROFILE_EMAIL.getConstant());
+        updateProfileNotFound("dummy profile id", "new username", "UPDATE_PROFILE_EMAIL.getConstant()");
     }
 
     @Test
     public void updateProfileTestSuccess() throws Exception {
-        String profileId = createProfileSuccess(UPDATE_PROFILE_JSON.getConstant());
-        updateProfileSuccess(profileId, "new username", UPDATE_PROFILE_EMAIL.getConstant());
+        String profileId = createProfileSuccess("UPDATE_PROFILE_JSON.getConstant()");
+        updateProfileSuccess(profileId, "new username", "UPDATE_PROFILE_EMAIL.getConstant()");
         String username = getProfileByIdSuccess(profileId, "/username");
         assertThat(username).isEqualTo("new username");
         updateProfileForbidden(profileId, "new username");
@@ -114,7 +127,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
 
     public void updateProfileSuccess(String profileId, String updateUsername, String authEmail) throws Exception {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
+                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
                         .contentType(APPLICATION_JSON)
                         .header("profileId", authEmail))
                 .andExpectAll(
@@ -126,7 +139,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
 
     public void updateProfileNotFound(String profileId, String updateUsername, String authEmail) throws Exception {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
+                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
                         .contentType(APPLICATION_JSON)
                         .header("profileId", authEmail))
                 .andExpectAll(
@@ -137,7 +150,7 @@ public class ProfileControllerTest extends IntegrationTestBase {
 
     public void updateProfileForbidden(String profileId, String updateUsername) throws Exception {
         mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content(PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername))
+                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
                         .contentType(APPLICATION_JSON)
                         .header("profileId", "dummy email"))
                 .andExpectAll(

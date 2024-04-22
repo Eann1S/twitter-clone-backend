@@ -1,172 +1,134 @@
 package integration_tests.controller;
 
 import com.example.profile.ProfileServiceApplication;
-import lombok.RequiredArgsConstructor;
+import com.example.profile.dto.request.CreateProfileRequest;
+import com.example.profile.dto.request.UpdateProfileRequest;
+import com.example.profile.dto.response.PageResponse;
+import com.example.profile.dto.response.ProfileResponse;
+import com.example.profile.entity.Profile;
+import com.google.gson.reflect.TypeToken;
+import org.instancio.Instancio;
+import org.instancio.junit.InstancioExtension;
+import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
+import org.springframework.cache.Cache;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.transaction.annotation.Transactional;
+import test_util.RequestConfig;
+import test_util.TestProfileUtil;
 import test_util.starter.AllServicesStarter;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import static com.example.profile.config.gson.GsonConfig.GSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.instancio.Select.field;
+import static test_util.TestControllerUtil.getContentWithExpectedStatus;
+import static test_util.constant.GlobalConstants.TEST_EMAIL;
+import static test_util.constant.GlobalConstants.TEST_USERNAME;
 import static test_util.constant.UrlConstants.*;
 
-@SpringBootTest(classes = ProfileServiceApplication.class)
+@SpringBootTest(classes = {ProfileServiceApplication.class, TestProfileUtil.class})
+@ActiveProfiles("test")
+@Transactional(transactionManager = "mongoTransactionManager")
+@ExtendWith(InstancioExtension.class)
 @AutoConfigureMockMvc
-@RequiredArgsConstructor
 public class ProfileControllerIntegrationTest implements AllServicesStarter {
 
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private CacheManager cacheManager;
+    private TestProfileUtil testProfileUtil;
+    @Autowired
+    @Qualifier("profiles")
+    private Cache cache;
 
     @BeforeEach
-    @SuppressWarnings("DataFlowIssue")
     public void setUp() {
-        cacheManager.getCache("profiles").clear();
+        cache.clear();
     }
 
     @Test
-    public void createProfileTestSuccess() throws Exception {
-        String profileId = createProfileSuccess("NEW_PROFILE_JSON.getConstant()");
-        String email = getProfileByIdSuccess(profileId, "/email");
-        assertThat(email).isEqualTo("NEW_PROFILE_EMAIL.getConstant()");
-        getProfileByEmailSuccess("NEW_PROFILE_EMAIL.getConstant()");
+    void shouldCreateProfile() throws Exception {
+        CreateProfileRequest createProfileRequest = new CreateProfileRequest(TEST_EMAIL, TEST_USERNAME, LocalDate.EPOCH);
+        RequestConfig<CreateProfileRequest> config = new RequestConfig<>(HttpMethod.POST, createProfileRequest, CREATE_PROFILE);
+
+        MockHttpServletRequestBuilder request = config.createRequest();
+        ResultActions resultActions = mockMvc.perform(request);
+        String jsonResponse = getContentWithExpectedStatus(resultActions, HttpStatus.OK);
+
+        ProfileResponse createdProfile = GSON.fromJson(jsonResponse, ProfileResponse.class);
+        assertThat(createdProfile)
+                .extracting(ProfileResponse::email, ProfileResponse::username, ProfileResponse::joinDate)
+                .containsExactly(TEST_EMAIL, TEST_USERNAME, LocalDate.EPOCH);
     }
 
-    @Test
-    public void createProfileTestFailure() throws Exception {
-        createProfileSuccess("EXISTENT_PROFILE_JSON.getConstant()");
-        createProfileFailure("EXISTENT_PROFILE_JSON.getConstant()");
-        getProfileByIdFailure();
-        getProfileByEmailFailure();
+    @ParameterizedTest
+    @InstancioSource
+    void shouldUpdateProfile(Profile profile, String bio, String location, String website) throws Exception {
+        ProfileResponse createdProfile = testProfileUtil.createProfile(profile);
+        UpdateProfileRequest updateProfileRequest = new UpdateProfileRequest(TEST_USERNAME, bio, location, website, LocalDate.EPOCH);
+        RequestConfig<UpdateProfileRequest> config = new RequestConfig<>(HttpMethod.PUT, updateProfileRequest, UPDATE_PROFILE);
+        config.customizer(builder -> builder.header("Profile-Id", createdProfile.id()));
+
+        MockHttpServletRequestBuilder request = config.createRequest();
+        ResultActions resultActions = mockMvc.perform(request);
+        String jsonResponse = getContentWithExpectedStatus(resultActions, HttpStatus.OK);
+
+        ProfileResponse updatedProfile = GSON.fromJson(jsonResponse, ProfileResponse.class);
+        assertThat(updatedProfile)
+                .extracting(ProfileResponse::username, ProfileResponse::bio, ProfileResponse::location, ProfileResponse::website)
+                .containsExactly(TEST_USERNAME, bio, location, website);
     }
 
-    @Test
-    public void updateProfileTestFailure() throws Exception {
-        updateProfileNotFound("dummy profile id", "new username", "UPDATE_PROFILE_EMAIL.getConstant()");
+    @ParameterizedTest
+    @InstancioSource
+    void shouldReturnProfile(Profile profile) throws Exception {
+        ProfileResponse createdProfile = testProfileUtil.createProfile(profile);
+        RequestConfig<Void> config = new RequestConfig<>(HttpMethod.GET, null, GET_PROFILE);
+        config.addParam("id", createdProfile.id());
+
+        MockHttpServletRequestBuilder request = config.createRequest();
+        ResultActions resultActions = mockMvc.perform(request);
+        String jsonResponse = getContentWithExpectedStatus(resultActions, HttpStatus.OK);
+
+        ProfileResponse response = GSON.fromJson(jsonResponse, ProfileResponse.class);
+        assertThat(response).isEqualTo(createdProfile);
     }
 
-    @Test
-    public void updateProfileTestSuccess() throws Exception {
-        String profileId = createProfileSuccess("UPDATE_PROFILE_JSON.getConstant()");
-        updateProfileSuccess(profileId, "new username", "UPDATE_PROFILE_EMAIL.getConstant()");
-        String username = getProfileByIdSuccess(profileId, "/username");
-        assertThat(username).isEqualTo("new username");
-        updateProfileForbidden(profileId, "new username");
+    @ParameterizedTest
+    @InstancioSource
+    void shouldReturnProfiles(String username) throws Exception {
+        List<Profile> profiles = generateProfilesWithUsername(username);
+        List<ProfileResponse> createdProfiles = testProfileUtil.createProfiles(profiles);
+        RequestConfig<Void> config = new RequestConfig<>(HttpMethod.GET, null, GET_PROFILES);
+        config.customizer(builder -> builder.queryParam("username", username));
+
+        MockHttpServletRequestBuilder request = config.createRequest();
+        ResultActions resultActions = mockMvc.perform(request);
+        String jsonResponse = getContentWithExpectedStatus(resultActions, HttpStatus.OK);
+
+        PageResponse<ProfileResponse> response = GSON.fromJson(jsonResponse, new TypeToken<>() {
+        });
+        assertThat(response.content()).containsExactlyInAnyOrderElementsOf(createdProfiles);
     }
 
-    private String createProfileSuccess(String content) throws Exception {
-        return mockMvc.perform(post(PROFILE_URL.getConstant())
-                        .content(content)
-                        .contentType(APPLICATION_JSON))
-                .andExpectAll(
-                        status().isCreated(),
-                        content().string(not(emptyString())),
-                        content().string(hasLength(24)) // for example: 64638d5eb8f40048bde121d3
-                )
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-    }
-
-    private void createProfileFailure(String content) throws Exception {
-        mockMvc.perform(post(PROFILE_URL.getConstant())
-                        .content(content)
-                        .contentType(APPLICATION_JSON))
-                .andExpectAll(
-                        status().is4xxClientError(),
-                        jsonPath("$.message").value(containsString("duplicate key error collection"))
-                );
-    }
-
-    private String getProfileByIdSuccess(String profileId, String fieldToExtract) throws Exception {
-        ResultActions resultActions = mockMvc.perform(get(PROFILE_BY_ID_URL.getConstant().formatted(profileId)))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(not(emptyString()))
-                );
-
-        return extractFieldFromResponse(resultActions, fieldToExtract);
-    }
-
-    private void getProfileByIdFailure() throws Exception {
-        mockMvc.perform(get(PROFILE_BY_ID_URL.getConstant().formatted("dummy id")))
-                .andExpectAll(
-                        status().isNotFound(),
-                        jsonPath("$.message").value("")
-                );
-    }
-
-    private void getProfileByEmailSuccess(String email) throws Exception {
-        mockMvc.perform(get(PROFILE_ID_BY_EMAIL_URL.getConstant().formatted(email)))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(not(emptyString())),
-                        content().string(hasLength(24))
-                );
-    }
-
-    private void getProfileByEmailFailure() throws Exception {
-        mockMvc.perform(get(PROFILE_ID_BY_EMAIL_URL.getConstant().formatted("dummy email")))
-                .andExpectAll(
-                        status().isNotFound(),
-                        jsonPath("$.message").value("")
-                );
-    }
-
-    public void updateProfileSuccess(String profileId, String updateUsername, String authEmail) throws Exception {
-        mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
-                        .contentType(APPLICATION_JSON)
-                        .header("profileId", authEmail))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        jsonPath("$.email").value(authEmail),
-                        jsonPath("$.username").value(updateUsername)
-                );
-    }
-
-    public void updateProfileNotFound(String profileId, String updateUsername, String authEmail) throws Exception {
-        mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
-                        .contentType(APPLICATION_JSON)
-                        .header("profileId", authEmail))
-                .andExpectAll(
-                        status().isNotFound(),
-                        jsonPath("$.message").value("")
-                );
-    }
-
-    public void updateProfileForbidden(String profileId, String updateUsername) throws Exception {
-        mockMvc.perform(patch(PROFILE_BY_ID_URL.getConstant().formatted(profileId))
-                        .content("PROFILE_UPDATE_REQ_PATTERN.getConstant().formatted(updateUsername)")
-                        .contentType(APPLICATION_JSON)
-                        .header("profileId", "dummy email"))
-                .andExpectAll(
-                        status().isForbidden(),
-                        jsonPath("$.message").value("")
-                );
-    }
-
-    private String extractFieldFromResponse(ResultActions resultActions, String field) throws Exception {
-        return new ObjectMapper()
-                .readTree(
-                        resultActions.andReturn()
-                                .getResponse()
-                                .getContentAsString()
-                )
-                .at(field)
-                .asText();
+    private List<Profile> generateProfilesWithUsername(String username) {
+        return Instancio.ofList(Profile.class)
+                .set(field(Profile::getUsername), username)
+                .create();
     }
 }

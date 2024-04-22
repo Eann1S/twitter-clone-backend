@@ -19,7 +19,7 @@ public interface ProfileMapper {
 
     Profile toProfile(CreateProfileRequest createProfileRequest);
 
-    @Mapping(target = "profileId", source = "id")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "followees", source = "id", qualifiedBy = FolloweesForProfile.class)
     @Mapping(target = "followers", source = "id", qualifiedBy = FollowersForProfile.class)
     ProfileResponse toResponse(Profile profile);

@@ -2,10 +2,11 @@ package com.example.profile.service.impl;
 
 import com.example.profile.dto.request.CreateProfileRequest;
 import com.example.profile.dto.request.UpdateProfileRequest;
+import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Profile;
-import com.example.profile.exception.ActionNotAllowedException;
 import com.example.profile.exception.EntityNotFoundException;
+import com.example.profile.mapper.PageMapper;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.CacheService;
@@ -19,6 +20,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
+    private final PageMapper pageMapper;
     private final CacheService cacheService;
 
     @Override
@@ -40,10 +42,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest, String loggedInProfileId) {
-        Profile profileToUpdate = findProfileById(id);
-        validateThatProfileIsLoggedIn(loggedInProfileId, profileToUpdate);
-        Profile updatedProfile = profileMapper.updateProfileFromUpdateProfileRequest(updateProfileRequest, profileToUpdate);
+    public ProfileResponse updateProfile(String id, UpdateProfileRequest updateProfileRequest) {
+        Profile profile = findProfileById(id);
+        Profile updatedProfile = profileMapper.updateProfileFromUpdateProfileRequest(updateProfileRequest, profile);
         updatedProfile = profileRepository.save(updatedProfile);
         ProfileResponse response = profileMapper.toResponse(updatedProfile);
         cacheService.putInCache(id, response);
@@ -51,9 +52,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public Page<ProfileResponse> getProfileResponsesByUsername(String username, Pageable pageable) {
+    public PageResponse<ProfileResponse> getProfileResponsesByUsername(String username, Pageable pageable) {
         Page<Profile> profiles = findProfilesByUsername(username, pageable);
-        return profiles.map(profileMapper::toResponse);
+        return pageMapper.mapToPageResponse(profiles);
     }
 
     @Override
@@ -64,11 +65,5 @@ public class ProfileServiceImpl implements ProfileService {
 
     private Page<Profile> findProfilesByUsername(String username, Pageable pageable) {
         return profileRepository.findByUsernameContaining(username, pageable);
-    }
-
-    private void validateThatProfileIsLoggedIn(String profileId, Profile loggedInProfile) {
-        if (!loggedInProfile.getId().equals(profileId)) {
-            throw new ActionNotAllowedException();
-        }
     }
 }

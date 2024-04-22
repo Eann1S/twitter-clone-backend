@@ -86,7 +86,7 @@ class FollowServiceImplTest {
     @InstancioSource
     void shouldReturnFollowers(Profile followee, Profile follower, ProfileResponse followerResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
-        when(followRepository.findAllByFolloweeProfile_Id(followee.getId()))
+        when(followRepository.findAllByFolloweeProfile_Id(followee.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(follower))
                 .thenReturn(followerResponse);
@@ -101,7 +101,7 @@ class FollowServiceImplTest {
     @InstancioSource
     void shouldReturnFollowees(Profile followee, Profile follower, ProfileResponse followeeResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
-        when(followRepository.findAllByFollowerProfile_Id(follower.getId()))
+        when(followRepository.findAllByFollowerProfile_Id(follower.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(followee))
                 .thenReturn(followeeResponse);
@@ -118,7 +118,7 @@ class FollowServiceImplTest {
                 .set(field(ProfileResponse::followers), CELEBRITY_FOLLOWERS_THRESHOLD + 1)
                 .create();
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
-        when(followRepository.findAllByFollowerProfile_Id(follower.getId()))
+        when(followRepository.findAllByFollowerProfile_Id(follower.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
         when(profileMapper.toResponse(followee))
                 .thenReturn(followeeResponse);

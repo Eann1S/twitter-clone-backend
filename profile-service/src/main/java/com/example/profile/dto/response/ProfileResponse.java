@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import java.time.LocalDate;
 
 public record ProfileResponse(
-        String profileId,
+        String id,
         String username,
         String email,
         Integer followers,

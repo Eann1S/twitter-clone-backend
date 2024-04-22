@@ -53,7 +53,7 @@ class ProfileMapperTest {
 
         assertThat(response)
                 .extracting(
-                        ProfileResponse::profileId,
+                        ProfileResponse::id,
                         ProfileResponse::username,
                         ProfileResponse::email,
                         ProfileResponse::followees,

@@ -60,7 +60,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Page<ProfileResponse> getFollowers(String profileId, Pageable pageable) {
-        return followRepository.findAllByFolloweeProfile_Id(profileId)
+        return followRepository.findAllByFolloweeProfile_Id(profileId, pageable)
                 .stream()
                 .map(Follow::getFollowerProfile)
                 .map(profileMapper::toResponse)
@@ -69,7 +69,7 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public Page<ProfileResponse> getFollowees(String profileId, Pageable pageable) {
-        return followRepository.findAllByFollowerProfile_Id(profileId)
+        return followRepository.findAllByFollowerProfile_Id(profileId, pageable)
                 .stream()
                 .map(Follow::getFolloweeProfile)
                 .map(profileMapper::toResponse)

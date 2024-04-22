@@ -1,20 +1,13 @@
 package test_util.constant;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+public class UrlConstants {
 
-@Getter
-@ToString
-@AllArgsConstructor
-public enum UrlConstants {
-    PROFILE_URL("/api/v1/profiles"),
-    PROFILE_BY_ID_URL("/api/v1/profiles/%s"),
-    PROFILE_ID_BY_EMAIL_URL("/api/v1/profiles/id/%s"),
+    public static final String CREATE_PROFILE = "/api/v1/profile";
+    public static final String GET_PROFILE = "/api/v1/profile/{id}";
+    public static final String GET_PROFILES = "/api/v1/profiles";
+    public static final String UPDATE_PROFILE = "/api/v1/profile/update";
 
-    FOLLOW_BY_ID_URL("/api/v1/follows/%s"),
-    FOLLOWERS_BY_ID_URL("/api/v1/follows/%s/followers"),
-    FOLLOWEES_BY_ID_URL("/api/v1/follows/%s/followees");
-
-    private final String constant;
+    public static final String FOLLOW_BY_ID_URL = "/api/v1/follows/%s";
+    public static final String FOLLOWERS_BY_ID_URL = "/api/v1/follows/%s/followers";
+    public static final String FOLLOWEES_BY_ID_URL = "/api/v1/follows/%s/followees";
 }

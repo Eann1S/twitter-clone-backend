@@ -2,16 +2,14 @@ package com.example.profile.controller;
 
 import com.example.profile.dto.request.CreateProfileRequest;
 import com.example.profile.dto.request.UpdateProfileRequest;
+import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +20,7 @@ public class ProfileController {
 
     @PostMapping("/profile")
     public ResponseEntity<ProfileResponse> createProfile(@Valid @RequestBody CreateProfileRequest request) {
-        return ResponseEntity.status(CREATED).body(profileService.createProfile(request));
+        return ResponseEntity.ok(profileService.createProfile(request));
     }
 
     @GetMapping("/profile/{id}")
@@ -31,20 +29,19 @@ public class ProfileController {
     }
 
     @GetMapping("/profiles")
-    public ResponseEntity<Page<ProfileResponse>> getProfilesByUsername(
+    public ResponseEntity<PageResponse<ProfileResponse>> getProfilesByUsername(
             @RequestParam String username,
             Pageable pageable
     ) {
-        Page<ProfileResponse> page = profileService.getProfileResponsesByUsername(username, pageable);
+        PageResponse<ProfileResponse> page = profileService.getProfileResponsesByUsername(username, pageable);
         return ResponseEntity.ok(page);
     }
 
-    @PutMapping("/profile/{id}/update")
+    @PutMapping("/profile/update")
     public ResponseEntity<ProfileResponse> updateProfile(
-            @Valid @RequestBody UpdateProfileRequest request,
-            @PathVariable String id,
-            @RequestHeader("Profile-Id") String profileId
+            @RequestHeader("Profile-Id") String profileId,
+            @Valid @RequestBody UpdateProfileRequest request
     ) {
-        return ResponseEntity.ok(profileService.updateProfile(id, request, profileId));
+        return ResponseEntity.ok(profileService.updateProfile(profileId, request));
     }
 }

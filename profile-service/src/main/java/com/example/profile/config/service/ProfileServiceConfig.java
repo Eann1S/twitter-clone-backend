@@ -1,5 +1,6 @@
 package com.example.profile.config.service;
 
+import com.example.profile.mapper.PageMapper;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
 import com.example.profile.service.CacheService;
@@ -16,9 +17,10 @@ public class ProfileServiceConfig {
 
     private final ProfileRepository profileRepository;
     private final ProfileMapper profileMapper;
+    private final PageMapper pageMapper;
 
     @Bean
     public ProfileService profileService(@Qualifier("profiles") CacheService cacheService) {
-        return new ProfileServiceImpl(profileRepository, profileMapper, cacheService);
+        return new ProfileServiceImpl(profileRepository, profileMapper, pageMapper, cacheService);
     }
 }

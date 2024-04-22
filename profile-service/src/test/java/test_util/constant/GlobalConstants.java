@@ -1,17 +1,10 @@
 package test_util.constant;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+public final class GlobalConstants {
 
-@Getter
-@ToString
-@AllArgsConstructor
-public enum GlobalConstants {
+    public static final String TEST_EMAIL = "new_profile@gmail.com";
+    public static final String TEST_USERNAME = "dummy username";
 
-    PROFILE_EMAIL("new_profile@gmail.com"),
-    USERNAME("dummy username"),
-    ID("dummy id");
-
-    private final String constant;
+    private GlobalConstants() {
+    }
 }

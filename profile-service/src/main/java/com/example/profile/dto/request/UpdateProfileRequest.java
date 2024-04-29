@@ -1,13 +1,13 @@
 package com.example.profile.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
 public record UpdateProfileRequest(
-        @Size(min = 5, max = 50, message = "{username.size}") @NotNull(message = "{username.not-null}")
+        @Size(min = 5, max = 25, message = "{username.size}") @NotBlank(message = "{username.not-blank}")
         String username,
 
         @Size(max = 160, message = "{bio.size}") String bio,

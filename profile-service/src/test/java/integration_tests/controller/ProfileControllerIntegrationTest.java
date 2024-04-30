@@ -32,7 +32,6 @@ import test_util.TestProfileUtil;
 import test_util.config.TestValidatorConfig;
 import test_util.starter.AllServicesStarter;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,10 +40,9 @@ import static com.example.profile.message.ErrorMessage.ENTITY_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.instancio.Select.field;
 import static org.springframework.http.HttpStatus.*;
-import static test_util.constant.GlobalConstants.TEST_EMAIL;
-import static test_util.constant.GlobalConstants.TEST_USERNAME;
 import static test_util.constant.UrlConstants.*;
 import static test_util.model.TestModels.VALID_CREATE_REQUEST_MODEL;
+import static test_util.model.TestModels.VALID_UPDATE_REQUEST_MODEL;
 
 @SpringBootTest(classes = {
         ProfileServiceApplication.class,
@@ -78,30 +76,41 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
     class SuccessfulTests {
         @Test
         void shouldCreateProfile() throws Exception {
-            var createProfileRequest = Instancio.of(VALID_CREATE_REQUEST_MODEL).create();
-            var requestConfig = createConfigForCreateProfileRequest(createProfileRequest);
+            var request = Instancio.of(VALID_CREATE_REQUEST_MODEL).create();
+            var requestConfig = createConfigForCreateProfileRequest(request);
 
             String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
 
             ProfileResponse profileResponse = GSON.fromJson(json, ProfileResponse.class);
             assertThat(profileResponse)
                     .extracting(ProfileResponse::email, ProfileResponse::username, ProfileResponse::joinDate)
-                    .containsExactly(TEST_EMAIL, TEST_USERNAME, LocalDate.EPOCH);
+                    .containsExactly(request.email(), request.username(), request.joinDate());
         }
 
-        @ParameterizedTest
-        @InstancioSource
-        void shouldUpdateProfile(String bio, String location, String website) throws Exception {
+        @Test
+        void shouldUpdateProfile() throws Exception {
             ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
-            var updateProfileRequest = new UpdateProfileRequest(TEST_USERNAME, bio, location, website, LocalDate.EPOCH);
-            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+            var request = Instancio.of(VALID_UPDATE_REQUEST_MODEL).create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), request);
 
             String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
 
             ProfileResponse profileResponse = GSON.fromJson(json, ProfileResponse.class);
             assertThat(profileResponse)
-                    .extracting(ProfileResponse::username, ProfileResponse::bio, ProfileResponse::location, ProfileResponse::website, ProfileResponse::birthDate)
-                    .containsExactly(TEST_USERNAME, bio, location, website, LocalDate.EPOCH);
+                    .extracting(
+                            ProfileResponse::username,
+                            ProfileResponse::bio,
+                            ProfileResponse::location,
+                            ProfileResponse::website,
+                            ProfileResponse::birthDate
+                    )
+                    .containsExactly(
+                            request.username(),
+                            request.bio(),
+                            request.location(),
+                            request.website(),
+                            request.birthDate()
+                    );
         }
 
         @Test
@@ -193,6 +202,90 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
             String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
 
             String errorMessage = getErrorMessageByCode("joinDate.not-null");
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenUsernameIsEmpty() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .set(field(UpdateProfileRequest::username), "")
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("username.not-blank");
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenUsernameHasInvalidLength() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .generate(field(UpdateProfileRequest::username), gen -> gen.string().length(100))
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("username.size", 5, 25);
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenBioHasInvalidLength() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .generate(field(UpdateProfileRequest::bio), gen -> gen.string().length(300))
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("bio.size", 160);
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenLocationHasInvalidLength() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .generate(field(UpdateProfileRequest::location), gen -> gen.string().length(100))
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("location.size", 30);
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenWebsiteHasInvalidLength() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .generate(field(UpdateProfileRequest::website), gen -> gen.string().length(150))
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("website.size", 100);
+            assertThat(json).contains(errorMessage);
+        }
+
+        @Test
+        void shouldNotUpdateProfile_whenBirthdateIsNotInThePast() throws Exception {
+            ProfileResponse createdProfile = testProfileUtil.createRandomProfile();
+            var updateProfileRequest = Instancio.of(VALID_UPDATE_REQUEST_MODEL)
+                    .generate(field(UpdateProfileRequest::birthDate), gen -> gen.temporal().localDate().future())
+                    .create();
+            var requestConfig = createConfigForUpdateProfileRequest(createdProfile.id(), updateProfileRequest);
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
+
+            String errorMessage = getErrorMessageByCode("birthDate.past");
             assertThat(json).contains(errorMessage);
         }
 

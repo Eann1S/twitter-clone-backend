@@ -14,7 +14,7 @@ public record UpdateProfileRequest(
         @Size(max = 30, message = "{location.size}") String location,
         @Size(max = 100, message = "{website.size}") String website,
 
-        @Past LocalDate birthDate
+        @Past(message = "{birthDate.past}") LocalDate birthDate
 ) {
 
 }

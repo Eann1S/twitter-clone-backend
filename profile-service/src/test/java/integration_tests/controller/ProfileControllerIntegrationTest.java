@@ -19,7 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.context.MessageSource;
@@ -53,7 +52,6 @@ import static test_util.model.TestModels.VALID_UPDATE_REQUEST_MODEL;
 @ActiveProfiles("test")
 @Transactional(transactionManager = "mongoTransactionManager")
 @ExtendWith(InstancioExtension.class)
-@AutoConfigureMockMvc
 public class ProfileControllerIntegrationTest implements AllServicesStarter {
 
     @Autowired
@@ -134,7 +132,7 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
 
             PageResponse<ProfileResponse> profileResponses = GSON.fromJson(json, new TypeToken<>() {
             });
-            assertThat(profileResponses.content()).containsExactlyInAnyOrderElementsOf(createdProfiles);
+            assertThat(profileResponses.getContent()).containsExactlyInAnyOrderElementsOf(createdProfiles);
         }
     }
 

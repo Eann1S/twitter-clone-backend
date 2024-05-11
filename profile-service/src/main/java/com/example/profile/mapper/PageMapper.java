@@ -14,5 +14,5 @@ import org.springframework.data.domain.Page;
 )
 public interface PageMapper {
 
-    PageResponse<ProfileResponse> mapToPageResponse(Page<Profile> page);
+    PageResponse<ProfileResponse> mapProfilesToPageResponse(Page<Profile> page);
 }

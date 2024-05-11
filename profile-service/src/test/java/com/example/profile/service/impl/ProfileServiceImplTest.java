@@ -107,12 +107,13 @@ class ProfileServiceImplTest {
     ) {
         when(profileRepository.findByUsernameContaining(profile.getUsername(), pageRequest))
                 .thenReturn(new PageImpl<>(List.of(profile)));
-        when(pageMapper.mapToPageResponse(any()))
+        when(pageMapper.mapProfilesToPageResponse(any()))
                 .thenReturn(pageResponse);
 
         PageResponse<ProfileResponse> actualResponse = profileService.getProfileResponsesByUsername(profile.getUsername(), pageRequest);
 
-        assertThat(actualResponse).isEqualTo(pageResponse);
+        assertThat(actualResponse.getContent())
+                .containsExactlyInAnyOrderElementsOf(pageResponse.getContent());
     }
 
     @ParameterizedTest

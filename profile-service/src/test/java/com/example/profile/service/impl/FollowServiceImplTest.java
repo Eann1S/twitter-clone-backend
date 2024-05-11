@@ -1,13 +1,15 @@
 package com.example.profile.service.impl;
 
+import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Follow;
 import com.example.profile.entity.Profile;
-import com.example.profile.mapper.ProfileMapper;
+import com.example.profile.mapper.PageMapper;
 import com.example.profile.repository.FollowRepository;
 import com.example.profile.service.FollowService;
 import com.example.profile.service.ProfileService;
 import org.instancio.Instancio;
+import org.instancio.TypeToken;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
@@ -36,12 +37,12 @@ class FollowServiceImplTest {
     @Mock
     private ProfileService profileService;
     @Mock
-    private ProfileMapper profileMapper;
+    private PageMapper pageMapper;
     private FollowService followService;
 
     @BeforeEach
     void setUp() {
-        followService = new FollowServiceImpl(followRepository, profileService, profileMapper);
+        followService = new FollowServiceImpl(followRepository, profileService, pageMapper);
     }
 
     @ParameterizedTest
@@ -53,9 +54,9 @@ class FollowServiceImplTest {
                 .thenReturn(follower);
         when(followRepository.existsByFollowerProfile_IdAndFolloweeProfile_Id(follower.getId(), followee.getId()))
                 .thenReturn(false);
-        boolean result = followService.follow(followee.getId(), follower.getId());
 
-        assertThat(result).isTrue();
+        followService.follow(followee.getId(), follower.getId());
+
         verify(followRepository).save(any(Follow.class));
     }
 
@@ -65,9 +66,8 @@ class FollowServiceImplTest {
         when(followRepository.existsByFollowerProfile_IdAndFolloweeProfile_Id(follower.getId(), followee.getId()))
                 .thenReturn(true);
 
-        boolean result = followService.unfollow(followee.getId(), follower.getId());
+        followService.unfollow(followee.getId(), follower.getId());
 
-        assertThat(result).isTrue();
         verify(followRepository).deleteByFollowerProfile_IdAndFolloweeProfile_Id(follower.getId(), followee.getId());
     }
 
@@ -84,54 +84,68 @@ class FollowServiceImplTest {
 
     @ParameterizedTest
     @InstancioSource
-    void shouldReturnFollowers(Profile followee, Profile follower, ProfileResponse followerResponse) {
+    void shouldReturnFollowers(Profile followee, Profile follower, PageResponse<ProfileResponse> pageResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
         when(followRepository.findAllByFolloweeProfile_Id(followee.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
-        when(profileMapper.toResponse(follower))
-                .thenReturn(followerResponse);
+        when(pageMapper.mapProfilesToPageResponse(any()))
+                .thenReturn(pageResponse);
 
+        PageResponse<ProfileResponse> followers = followService.getFollowers(followee.getId(), Pageable.unpaged());
 
-        Page<ProfileResponse> followers = followService.getFollowers(followee.getId(), Pageable.unpaged());
-
-        assertThat(followers).containsExactly(followerResponse);
+        assertThat(followers.getContent())
+                .containsExactlyInAnyOrderElementsOf(pageResponse.getContent());
     }
 
     @ParameterizedTest
     @InstancioSource
     void shouldReturnFollowees(Profile followee, Profile follower, ProfileResponse followeeResponse) {
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
+        var pageResponse = generatePageResponseWithContent(followeeResponse);
         when(followRepository.findAllByFollowerProfile_Id(follower.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
-        when(profileMapper.toResponse(followee))
-                .thenReturn(followeeResponse);
+        when(pageMapper.mapProfilesToPageResponse(any()))
+                .thenReturn(pageResponse);
 
-        Page<ProfileResponse> followees = followService.getFollowees(follower.getId(), Pageable.unpaged());
+        PageResponse<ProfileResponse> followees = followService.getFollowees(follower.getId(), Pageable.unpaged());
 
-        assertThat(followees).containsExactly(followeeResponse);
+        assertThat(followees.getContent()).containsExactly(followeeResponse);
     }
 
     @ParameterizedTest
     @InstancioSource
     void shouldReturnFolloweesCelebrities(Profile followee, Profile follower) {
-        ProfileResponse followeeResponse = Instancio.of(ProfileResponse.class)
-                .set(field(ProfileResponse::followers), CELEBRITY_FOLLOWERS_THRESHOLD + 1)
-                .create();
+        ProfileResponse followeeCelebrity = generateFolloweeCelebrity();
         Follow follow = generateFollowWithFolloweeAndFollower(followee, follower);
+        var pageResponse = generatePageResponseWithContent(followeeCelebrity);
         when(followRepository.findAllByFollowerProfile_Id(follower.getId(), Pageable.unpaged()))
                 .thenReturn(new PageImpl<>(List.of(follow)));
-        when(profileMapper.toResponse(followee))
-                .thenReturn(followeeResponse);
+        when(pageMapper.mapProfilesToPageResponse(any()))
+                .thenReturn(pageResponse);
 
-        Page<ProfileResponse> followeesCelebrities = followService.getFolloweesCelebrities(follower.getId());
+        PageResponse<ProfileResponse> followeesCelebrities = followService.getFolloweesCelebrities(follower.getId());
 
-        assertThat(followeesCelebrities).containsExactly(followeeResponse);
+        assertThat(followeesCelebrities.getContent())
+                .containsExactlyInAnyOrderElementsOf(pageResponse.getContent());
     }
 
     private Follow generateFollowWithFolloweeAndFollower(Profile followee, Profile follower) {
         return Instancio.of(Follow.class)
                 .set(field(Follow::getFolloweeProfile), followee)
                 .set(field(Follow::getFollowerProfile), follower)
+                .create();
+    }
+
+    private PageResponse<ProfileResponse> generatePageResponseWithContent(ProfileResponse... profileResponses) {
+        PageResponse<ProfileResponse> pageResponse = Instancio.create(new TypeToken<>() {
+        });
+        pageResponse.setContent(List.of(profileResponses));
+        return pageResponse;
+    }
+
+    private ProfileResponse generateFolloweeCelebrity() {
+        return Instancio.of(ProfileResponse.class)
+                .set(field(ProfileResponse::followers), CELEBRITY_FOLLOWERS_THRESHOLD + 1)
                 .create();
     }
 }

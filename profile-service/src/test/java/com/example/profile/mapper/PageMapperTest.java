@@ -37,8 +37,8 @@ class PageMapperTest {
                 .thenReturn(profileResponse);
         Page<Profile> page = new PageImpl<>(List.of(profile));
 
-        PageResponse<ProfileResponse> actualResponse = pageMapper.mapToPageResponse(page);
+        PageResponse<ProfileResponse> actualResponse = pageMapper.mapProfilesToPageResponse(page);
 
-        assertThat(actualResponse.content()).containsExactly(profileResponse);
+        assertThat(actualResponse.getContent()).containsExactly(profileResponse);
     }
 }

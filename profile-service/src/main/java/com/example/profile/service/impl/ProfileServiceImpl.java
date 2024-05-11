@@ -54,7 +54,7 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public PageResponse<ProfileResponse> getProfileResponsesByUsername(String username, Pageable pageable) {
         Page<Profile> profiles = findProfilesByUsername(username, pageable);
-        return pageMapper.mapToPageResponse(profiles);
+        return pageMapper.mapProfilesToPageResponse(profiles);
     }
 
     @Override

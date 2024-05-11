@@ -1,18 +1,30 @@
 package com.example.profile.dto.response;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-public record PageResponse<T>(
-        @Getter
-        List<T> content,
-        int totalPages,
-        int totalElements,
-        int number,
-        int size,
-        boolean last,
-        boolean first,
-        boolean empty
-) {
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class PageResponse<T> {
+
+    private List<T> content;
+    private int totalPages;
+    private int totalElements;
+    private int number;
+    private int size;
+    private boolean last;
+    private boolean first;
+    private boolean empty;
+
+    public boolean isEmpty() {
+        return content.isEmpty();
+    }
+
+    public int getTotalElements() {
+        return content.size();
+    }
 }

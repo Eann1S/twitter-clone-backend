@@ -18,6 +18,10 @@ public class TestProfileUtil {
     @Autowired
     private ProfileService profileService;
 
+    public ProfileResponse getProfileResponse(String id) {
+        return profileService.getProfileResponseById(id);
+    }
+
     public ProfileResponse createRandomProfile() {
         CreateProfileRequest request = Instancio.create(CreateProfileRequest.class);
         return createProfile(request);

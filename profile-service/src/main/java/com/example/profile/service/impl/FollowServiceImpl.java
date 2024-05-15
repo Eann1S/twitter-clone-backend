@@ -1,5 +1,6 @@
 package com.example.profile.service.impl;
 
+import com.example.profile.config.service.FollowServiceConfig;
 import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Follow;
@@ -28,6 +29,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final ProfileService profileService;
     private final PageMapper pageMapper;
+    private final FollowServiceConfig config;
 
     @Override
     public void follow(String followeeId, String profileId) {
@@ -81,7 +83,7 @@ public class FollowServiceImpl implements FollowService {
     private List<ProfileResponse> filterFolloweesCelebrities(PageResponse<ProfileResponse> followees) {
         return followees.getContent()
                 .stream()
-                .filter(profile -> profile.followers() > CELEBRITY_FOLLOWERS_THRESHOLD)
+                .filter(profile -> profile.followers() > config.getCelebrityFollowersThreshold())
                 .collect(toList());
     }
 }

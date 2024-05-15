@@ -6,8 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface FollowService {
 
-    int CELEBRITY_FOLLOWERS_THRESHOLD = 10000;
-
     void follow(String followeeId, String profileId);
 
     void unfollow(String followeeId, String profileId);

@@ -1,116 +1,181 @@
 package integration_tests.controller;
 
 import com.example.profile.ProfileServiceApplication;
-import lombok.RequiredArgsConstructor;
+import com.example.profile.config.service.FollowServiceConfig;
+import com.example.profile.dto.response.PageResponse;
+import com.example.profile.dto.response.ProfileResponse;
+import com.google.gson.reflect.TypeToken;
+import org.instancio.junit.InstancioExtension;
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpMethod;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+import test_util.RequestConfig;
+import test_util.TestControllerUtil;
+import test_util.TestFollowUtil;
+import test_util.TestProfileUtil;
 import test_util.starter.AllServicesStarter;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static test_util.constant.GlobalConstants.PROFILE_EMAIL;
+import static com.example.profile.config.gson.GsonConfig.GSON;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.OK;
 import static test_util.constant.UrlConstants.*;
 
-@SpringBootTest(classes = ProfileServiceApplication.class)
-@AutoConfigureMockMvc
-@RequiredArgsConstructor
+@SpringBootTest(classes = {
+        ProfileServiceApplication.class,
+        TestProfileUtil.class,
+        TestControllerUtil.class,
+        TestFollowUtil.class
+})
+@ActiveProfiles("test")
+@Transactional(transactionManager = "mongoTransactionManager")
+@ExtendWith(InstancioExtension.class)
 public class FollowControllerIntegrationTest implements AllServicesStarter {
 
-    private final MockMvc mockMvc;
+    @Autowired
+    private TestProfileUtil testProfileUtil;
+    @Autowired
+    private TestControllerUtil testControllerUtil;
+    @Autowired
+    private TestFollowUtil testFollowUtil;
+    @Autowired
+    private FollowServiceConfig config;
 
-    @Test
-    public void isFollowedTest() throws Exception {
-        String profileId = getProfileIdByEmail("EXISTENT_PROFILE_EMAIL.getConstant()");
-        isFollowedExpect(profileId, PROFILE_EMAIL.getConstant(), "false");
-        followExpect(profileId, PROFILE_EMAIL.getConstant(), "true");
-        followExpect(profileId, PROFILE_EMAIL.getConstant(), "false");
-        isFollowedExpect(profileId, PROFILE_EMAIL.getConstant(), "true");
-        unfollowExpect(profileId, PROFILE_EMAIL.getConstant(), "true");
-        unfollowExpect(profileId, PROFILE_EMAIL.getConstant(), "false");
-        isFollowedExpect(profileId, PROFILE_EMAIL.getConstant(), "false");
+    private ProfileResponse followee;
+    private ProfileResponse profile;
+
+    @BeforeEach
+    void setUp() {
+        followee = testProfileUtil.createRandomProfile();
+        profile = testProfileUtil.createRandomProfile();
     }
 
     @Test
-    public void getFollowersTest() throws Exception {
-        String followeeId = getProfileIdByEmail("UPDATE_PROFILE_EMAIL.getConstant()");
-        followExpect(followeeId, PROFILE_EMAIL.getConstant(), "true");
-        followExpect(followeeId, "EXISTENT_PROFILE_EMAIL.getConstant()", "true");
-        getFollowersExpectAmount(followeeId, 2);
-        unfollowExpect(followeeId, PROFILE_EMAIL.getConstant(), "true");
-        getFollowersExpectAmount(followeeId, 1);
-        unfollowExpect(followeeId, "EXISTENT_PROFILE_EMAIL.getConstant()", "true");
-        getFollowersExpectAmount(followeeId, 0);
+    void shouldFollow() throws Exception {
+        var requestConfig = createConfigForFollowRequest();
+
+        testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
+
+        boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
+        assertThat(followed).isTrue();
     }
 
     @Test
-    public void getFolloweesTest() throws Exception {
-        String firstFolloweeId = getProfileIdByEmail("EXISTENT_PROFILE_EMAIL.getConstant()");
-        String secondFolloweeId = getProfileIdByEmail(PROFILE_EMAIL.getConstant());
-        followExpect(firstFolloweeId, "UPDATE_PROFILE_EMAIL.getConstant()", "true");
-        followExpect(secondFolloweeId, "UPDATE_PROFILE_EMAIL.getConstant()", "true");
-        String followerId = getProfileIdByEmail("UPDATE_PROFILE_EMAIL.getConstant()");
-        getFolloweesExpectAmount(followerId, 2);
-        unfollowExpect(firstFolloweeId, "UPDATE_PROFILE_EMAIL.getConstant()", "true");
-        getFolloweesExpectAmount(followerId, 1);
-        unfollowExpect(secondFolloweeId, "UPDATE_PROFILE_EMAIL.getConstant()", "true");
-        getFolloweesExpectAmount(followerId, 0);
+    void shouldUnfollow() throws Exception {
+        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+        var requestConfig = createConfigForUnfollowRequest();
+
+        testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
+
+        boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
+        assertThat(followed).isFalse();
     }
 
-    private void isFollowedExpect(String followeeId, String profileId, String expected) throws Exception {
-        mockMvc.perform(get(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("profileId", profileId))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(expected)
-                );
+    @Test
+    void isFollowedTest() throws Exception {
+        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+        var requestConfig = createConfigForIsFollowedRequest();
+
+        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+        Boolean followed = GSON.fromJson(json, Boolean.class);
+        assertThat(followed).isTrue();
     }
 
-    private void followExpect(String followeeId, String profileId, String expected) throws Exception {
-        mockMvc.perform(post(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("profileId", profileId))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(expected)
-                );
+    @Test
+    void getFollowersTest() throws Exception {
+        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+        profile = updateProfileById(profile.id());
+        var requestConfig = createConfigForGetFollowersRequest();
+
+        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+        PageResponse<ProfileResponse> followers = GSON.fromJson(json, new TypeToken<>() {
+        });
+        assertThat(followers.getContent()).containsExactly(profile);
     }
 
-    private void unfollowExpect(String followeeId, String profileId, String expected) throws Exception {
-        mockMvc.perform(delete(FOLLOW_BY_ID_URL.getConstant().formatted(followeeId))
-                        .header("profileId", profileId))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(expected)
-                );
+    @Test
+    void getFolloweesTest() throws Exception {
+        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+        followee = updateProfileById(followee.id());
+        var requestConfig = createConfigForGetFolloweesRequest();
+
+        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+        PageResponse<ProfileResponse> followees = GSON.fromJson(json, new TypeToken<>() {
+        });
+        assertThat(followees.getContent()).containsExactly(followee);
     }
 
-    private void getFollowersExpectAmount(String profileId, Integer amount) throws Exception {
-        mockMvc.perform(get(FOLLOWERS_BY_ID_URL.getConstant().formatted(profileId)))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        jsonPath("$", hasSize(amount))
-                );
+    @Test
+    void getFolloweesCelebritiesTest() throws Exception {
+        followee = createCelebrity();
+        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+        followee = updateProfileById(followee.id());
+        var requestConfig = createConfigForGetFolloweesCelebritiesRequest();
+
+        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+        PageResponse<ProfileResponse> followeesCelebrities = GSON.fromJson(json, new TypeToken<>() {
+        });
+        assertThat(followeesCelebrities.getContent()).containsExactly(followee);
     }
 
-    private void getFolloweesExpectAmount(String profileId, Integer amount) throws Exception {
-        mockMvc.perform(get(FOLLOWEES_BY_ID_URL.getConstant().formatted(profileId)))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        jsonPath("$", hasSize(amount))
-                );
+    private RequestConfig<Void> createConfigForFollowRequest() {
+        return createRequestConfigWithFolloweeIdParamAndProfileIdHeader(HttpMethod.POST, FOLLOW);
     }
 
-    private String getProfileIdByEmail(String email) throws Exception {
-        return mockMvc.perform(get(PROFILE_ID_BY_EMAIL_URL.getConstant().formatted(email)))
-                .andExpectAll(
-                        status().is2xxSuccessful(),
-                        content().string(not(emptyString())),
-                        content().string(hasLength(24))
-                )
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+    private RequestConfig<Void> createConfigForUnfollowRequest() {
+        return createRequestConfigWithFolloweeIdParamAndProfileIdHeader(HttpMethod.DELETE, UNFOLLOW);
+    }
+
+    private RequestConfig<Void> createConfigForIsFollowedRequest() {
+        return createRequestConfigWithFolloweeIdParamAndProfileIdHeader(HttpMethod.GET, IS_FOLLOWED);
+    }
+
+    private RequestConfig<Void> createConfigForGetFollowersRequest() {
+        return createGetRequestConfigWithIdParam(FOLLOWERS, followee.id());
+    }
+
+    private RequestConfig<Void> createConfigForGetFolloweesRequest() {
+        return createGetRequestConfigWithIdParam(FOLLOWEES, profile.id());
+    }
+
+    private RequestConfig<Void> createConfigForGetFolloweesCelebritiesRequest() {
+        return createGetRequestConfigWithIdParam(FOLLOWEES_CELEBRITIES, profile.id());
+    }
+
+    @NotNull
+    private RequestConfig<Void> createGetRequestConfigWithIdParam(String url, String profileId) {
+        RequestConfig<Void> config = new RequestConfig<>(HttpMethod.GET, null, url);
+        config.addParam("profileId", profileId);
+        return config;
+    }
+
+    @NotNull
+    private RequestConfig<Void> createRequestConfigWithFolloweeIdParamAndProfileIdHeader(HttpMethod httpMethod, String url) {
+        RequestConfig<Void> config = new RequestConfig<>(httpMethod, null, url);
+        config.addParam("followeeId", followee.id());
+        config.addHeader("Profile-Id", profile.id());
+        return config;
+    }
+
+    public ProfileResponse createCelebrity() {
+        ProfileResponse celebrity = testProfileUtil.createRandomProfile();
+        for (int i = 0; i < config.getCelebrityFollowersThreshold() + 1; i++) {
+            ProfileResponse randomProfile = testProfileUtil.createRandomProfile();
+            testFollowUtil.followOneProfileToAnother(celebrity.id(), randomProfile.id());
+        }
+        return celebrity;
+    }
+
+    private ProfileResponse updateProfileById(String id) {
+        return testProfileUtil.getProfileResponse(id);
     }
 }

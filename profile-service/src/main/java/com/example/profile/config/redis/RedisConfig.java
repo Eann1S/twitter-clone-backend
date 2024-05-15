@@ -22,10 +22,6 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "spring.data.redis")
 public class RedisConfig {
 
-    public static final String FOLLOWERS_CACHE = "followers";
-    public static final String FOLLOWEES_CACHE = "followees";
-    public static final String FOLLOWEES_CELEBRITIES_CACHE = "followees_celebrities";
-
     private static final Duration CACHE_TIME_TO_LIVE = Duration.ofHours(12);
     private String host;
     private String port;

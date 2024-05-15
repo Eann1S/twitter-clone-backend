@@ -29,6 +29,11 @@ public class TestControllerUtil {
         return getJsonResponseWithExpectedStatus(resultActions, status);
     }
 
+    public <T> void expectStatusFromPerformedRequest(RequestConfig<T> requestConfig, HttpStatus status) throws Exception {
+        ResultActions resultActions = mockMvc.perform(createRequest(requestConfig));
+        expectStatus(resultActions, status);
+    }
+
     private <T> MockHttpServletRequestBuilder createRequest(RequestConfig<T> config) {
         String expandedUrl = expandUrlWithParams(config);
         MockHttpServletRequestBuilder requestBuilder = request(config.httpMethod(), expandedUrl)

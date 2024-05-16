@@ -13,6 +13,7 @@ import com.example.profile.service.CacheService;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.mockito.Mock;
@@ -48,82 +49,88 @@ class ProfileServiceImplTest {
         profileService = new ProfileServiceImpl(profileRepository, profileMapper, pageMapper, cacheService);
     }
 
-    @ParameterizedTest
-    @InstancioSource
-    void shouldCreateProfile(CreateProfileRequest request, Profile profile, ProfileResponse profileResponse) {
-        when(profileMapper.toProfile(request))
-                .thenReturn(profile);
-        when(profileRepository.save(profile))
-                .thenReturn(profile);
-        when(profileMapper.toResponse(profile))
-                .thenReturn(profileResponse);
+    @Nested
+    class SuccessCases {
+        @ParameterizedTest
+        @InstancioSource
+        void shouldCreateProfile(CreateProfileRequest request, Profile profile, ProfileResponse profileResponse) {
+            when(profileMapper.toProfile(request))
+                    .thenReturn(profile);
+            when(profileRepository.save(profile))
+                    .thenReturn(profile);
+            when(profileMapper.toResponse(profile))
+                    .thenReturn(profileResponse);
 
-        ProfileResponse actualResponse = profileService.createProfile(request);
+            ProfileResponse actualResponse = profileService.createProfile(request);
 
-        verify(profileRepository).save(profile);
-        assertThat(actualResponse).isEqualTo(profileResponse);
+            verify(profileRepository).save(profile);
+            assertThat(actualResponse).isEqualTo(profileResponse);
+        }
+
+        @ParameterizedTest
+        @InstancioSource
+        void shouldReturnProfileResponseById(Profile profile, ProfileResponse profileResponse) {
+            when(cacheService.getFromCache(profile.getId()))
+                    .thenReturn(Optional.empty());
+            when(profileRepository.findById(profile.getId()))
+                    .thenReturn(Optional.of(profile));
+            when(profileMapper.toResponse(profile))
+                    .thenReturn(profileResponse);
+
+            ProfileResponse actualResponse = profileService.getProfileResponseById(profile.getId());
+
+            assertThat(actualResponse).isEqualTo(profileResponse);
+            verify(cacheService).putInCache(profile.getId(), profileResponse);
+        }
+
+        @ParameterizedTest
+        @InstancioSource
+        void shouldUpdateProfile(Profile profile, ProfileResponse profileResponse, UpdateProfileRequest request) {
+            when(profileRepository.findById(profile.getId()))
+                    .thenReturn(Optional.of(profile));
+            when(profileRepository.save(profile))
+                    .thenReturn(profile);
+            when(profileMapper.updateProfileFromUpdateProfileRequest(request, profile))
+                    .thenReturn(profile);
+            when(profileMapper.toResponse(profile))
+                    .thenReturn(profileResponse);
+
+            ProfileResponse actualResponse = profileService.updateProfile(profile.getId(), request);
+
+            assertThat(actualResponse).isEqualTo(profileResponse);
+            verify(cacheService).putInCache(profile.getId(), profileResponse);
+        }
+
+        @ParameterizedTest
+        @InstancioSource
+        void shouldReturnProfilesByUsername(
+                Profile profile,
+                PageRequest pageRequest,
+                PageResponse<ProfileResponse> pageResponse
+        ) {
+            when(profileRepository.findByUsernameContaining(profile.getUsername(), pageRequest))
+                    .thenReturn(new PageImpl<>(List.of(profile)));
+            when(pageMapper.mapProfilesToPageResponse(any()))
+                    .thenReturn(pageResponse);
+
+            PageResponse<ProfileResponse> actualResponse = profileService.getProfileResponsesByUsername(profile.getUsername(), pageRequest);
+
+            assertThat(actualResponse.getContent())
+                    .containsExactlyInAnyOrderElementsOf(pageResponse.getContent());
+        }
     }
 
-    @ParameterizedTest
-    @InstancioSource
-    void shouldReturnProfileResponseById(Profile profile, ProfileResponse profileResponse) {
-        when(cacheService.getFromCache(profile.getId()))
-                .thenReturn(Optional.empty());
-        when(profileRepository.findById(profile.getId()))
-                .thenReturn(Optional.of(profile));
-        when(profileMapper.toResponse(profile))
-                .thenReturn(profileResponse);
+    @Nested
+    class FailureCases {
+        @ParameterizedTest
+        @InstancioSource
+        void shouldThrowException_whenProfileWasNotFound(Profile profile) {
+            when(profileRepository.findById(profile.getId()))
+                    .thenReturn(Optional.empty());
 
-        ProfileResponse actualResponse = profileService.getProfileResponseById(profile.getId());
-
-        assertThat(actualResponse).isEqualTo(profileResponse);
-        verify(cacheService).putInCache(profile.getId(), profileResponse);
-    }
-
-    @ParameterizedTest
-    @InstancioSource
-    void shouldUpdateProfile(Profile profile, ProfileResponse profileResponse, UpdateProfileRequest request) {
-        when(profileRepository.findById(profile.getId()))
-                .thenReturn(Optional.of(profile));
-        when(profileRepository.save(profile))
-                .thenReturn(profile);
-        when(profileMapper.updateProfileFromUpdateProfileRequest(request, profile))
-                .thenReturn(profile);
-        when(profileMapper.toResponse(profile))
-                .thenReturn(profileResponse);
-
-        ProfileResponse actualResponse = profileService.updateProfile(profile.getId(), request);
-
-        assertThat(actualResponse).isEqualTo(profileResponse);
-        verify(cacheService).putInCache(profile.getId(), profileResponse);
-    }
-
-    @ParameterizedTest
-    @InstancioSource
-    void shouldReturnProfilesByUsername(
-            Profile profile,
-            PageRequest pageRequest,
-            PageResponse<ProfileResponse> pageResponse
-    ) {
-        when(profileRepository.findByUsernameContaining(profile.getUsername(), pageRequest))
-                .thenReturn(new PageImpl<>(List.of(profile)));
-        when(pageMapper.mapProfilesToPageResponse(any()))
-                .thenReturn(pageResponse);
-
-        PageResponse<ProfileResponse> actualResponse = profileService.getProfileResponsesByUsername(profile.getUsername(), pageRequest);
-
-        assertThat(actualResponse.getContent())
-                .containsExactlyInAnyOrderElementsOf(pageResponse.getContent());
-    }
-
-    @ParameterizedTest
-    @InstancioSource
-    void shouldThrowException_whenProfileWasNotFound(Profile profile) {
-        when(profileRepository.findById(profile.getId()))
-                .thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> profileService.getProfileResponseById(profile.getId()))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage(ENTITY_NOT_FOUND.formatWith(profile.getId()));
+            assertThatThrownBy(() -> profileService.getProfileResponseById(profile.getId()))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(ENTITY_NOT_FOUND.formatWith(profile.getId()));
+        }
     }
 }

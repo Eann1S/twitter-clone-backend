@@ -2,7 +2,9 @@ package com.example.profile.exception.handler;
 
 import com.example.profile.dto.response.ErrorDetail;
 import com.example.profile.dto.response.ErrorResponse;
+import com.example.profile.exception.AlreadyFollowingException;
 import com.example.profile.exception.EntityNotFoundException;
+import com.example.profile.exception.NotFollowingException;
 import com.mongodb.MongoWriteException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +21,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ControllerAdvice
-public class CustomExceptionHandler {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<List<ErrorDetail>> handleValidationExceptions(MethodArgumentNotValidException e) {
@@ -27,8 +29,8 @@ public class CustomExceptionHandler {
         return new ResponseEntity<>(errors, BAD_REQUEST);
     }
 
-    @ExceptionHandler(MongoWriteException.class)
-    public ResponseEntity<ErrorResponse> handleException(MongoWriteException e) {
+    @ExceptionHandler({MongoWriteException.class, AlreadyFollowingException.class, NotFollowingException.class})
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
         return generateErrorResponse(BAD_REQUEST, e);
     }
 

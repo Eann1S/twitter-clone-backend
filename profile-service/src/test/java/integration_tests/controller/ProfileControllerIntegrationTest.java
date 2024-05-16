@@ -71,7 +71,7 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
     }
 
     @Nested
-    class SuccessfulTests {
+    class SuccessCases {
         @Test
         void shouldCreateProfile() throws Exception {
             var request = Instancio.of(VALID_CREATE_REQUEST_MODEL).create();
@@ -137,7 +137,7 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
     }
 
     @Nested
-    class FailureTests {
+    class FailureCases {
         @Test
         void shouldNotCreateProfile_whenEmailIsEmpty() throws Exception {
             var createProfileRequest = Instancio.of(VALID_CREATE_REQUEST_MODEL)

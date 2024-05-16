@@ -5,6 +5,8 @@ import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Follow;
 import com.example.profile.entity.Profile;
+import com.example.profile.exception.AlreadyFollowingException;
+import com.example.profile.exception.NotFollowingException;
 import com.example.profile.mapper.PageMapper;
 import com.example.profile.repository.FollowRepository;
 import com.example.profile.service.FollowService;
@@ -33,23 +35,25 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public void follow(String followeeId, String profileId) {
-        if (!isFollowed(followeeId, profileId)) {
-            Profile followee = profileService.findProfileById(followeeId);
-            Profile profile = profileService.findProfileById(profileId);
-            Follow follow = Follow.builder()
-                    .followeeProfile(followee)
-                    .followerProfile(profile)
-                    .followDateTime(LocalDateTime.now())
-                    .build();
-            followRepository.save(follow);
+        if (isFollowed(followeeId, profileId)) {
+            throw new AlreadyFollowingException(followeeId, profileId);
         }
+        Profile followee = profileService.findProfileById(followeeId);
+        Profile profile = profileService.findProfileById(profileId);
+        Follow follow = Follow.builder()
+                .followeeProfile(followee)
+                .followerProfile(profile)
+                .followDateTime(LocalDateTime.now())
+                .build();
+        followRepository.save(follow);
     }
 
     @Override
     public void unfollow(String followeeId, String profileId) {
-        if (isFollowed(followeeId, profileId)) {
-            followRepository.deleteByFollowerProfile_IdAndFolloweeProfile_Id(profileId, followeeId);
+        if (!isFollowed(followeeId, profileId)) {
+            throw new NotFollowingException(followeeId, profileId);
         }
+        followRepository.deleteByFollowerProfile_IdAndFolloweeProfile_Id(profileId, followeeId);
     }
 
     @Override

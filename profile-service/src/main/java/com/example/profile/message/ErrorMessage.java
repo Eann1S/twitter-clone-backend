@@ -9,8 +9,9 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 public enum ErrorMessage {
 
-    ENTITY_NOT_FOUND("Entity with %s not found"),
-    FORBIDDEN("You are not allowed to do that");
+    ENTITY_NOT_FOUND("Entity %s not found"),
+    ALREADY_FOLLOWING("Profile %s is already following profile %s"),
+    NOT_FOLLOWING("Profile %s isn't following profile %s");
 
     private final String message;
 

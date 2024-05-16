@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import org.instancio.junit.InstancioExtension;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,10 @@ import test_util.TestProfileUtil;
 import test_util.starter.AllServicesStarter;
 
 import static com.example.profile.config.gson.GsonConfig.GSON;
+import static com.example.profile.message.ErrorMessage.ALREADY_FOLLOWING;
+import static com.example.profile.message.ErrorMessage.NOT_FOLLOWING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 import static test_util.constant.UrlConstants.*;
 
@@ -55,76 +59,101 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         profile = testProfileUtil.createRandomProfile();
     }
 
-    @Test
-    void shouldFollow() throws Exception {
-        var requestConfig = createConfigForFollowRequest();
+    @Nested
+    class SuccessCases {
+        @Test
+        void shouldFollow() throws Exception {
+            var requestConfig = createConfigForFollowRequest();
 
-        testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
+            testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
 
-        boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
-        assertThat(followed).isTrue();
+            boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
+            assertThat(followed).isTrue();
+        }
+
+        @Test
+        void shouldUnfollow() throws Exception {
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            var requestConfig = createConfigForUnfollowRequest();
+
+            testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
+
+            boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
+            assertThat(followed).isFalse();
+        }
+
+        @Test
+        void isFollowedTest() throws Exception {
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            var requestConfig = createConfigForIsFollowedRequest();
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+            Boolean followed = GSON.fromJson(json, Boolean.class);
+            assertThat(followed).isTrue();
+        }
+
+        @Test
+        void getFollowersTest() throws Exception {
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            profile = updateProfileById(profile.id());
+            var requestConfig = createConfigForGetFollowersRequest();
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+            PageResponse<ProfileResponse> followers = GSON.fromJson(json, new TypeToken<>() {
+            });
+            assertThat(followers.getContent()).containsExactly(profile);
+        }
+
+        @Test
+        void getFolloweesTest() throws Exception {
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            followee = updateProfileById(followee.id());
+            var requestConfig = createConfigForGetFolloweesRequest();
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+            PageResponse<ProfileResponse> followees = GSON.fromJson(json, new TypeToken<>() {
+            });
+            assertThat(followees.getContent()).containsExactly(followee);
+        }
+
+        @Test
+        void getFolloweesCelebritiesTest() throws Exception {
+            followee = createCelebrity();
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            followee = updateProfileById(followee.id());
+            var requestConfig = createConfigForGetFolloweesCelebritiesRequest();
+
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+
+            PageResponse<ProfileResponse> followeesCelebrities = GSON.fromJson(json, new TypeToken<>() {
+            });
+            assertThat(followeesCelebrities.getContent()).containsExactly(followee);
+        }
     }
 
-    @Test
-    void shouldUnfollow() throws Exception {
-        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
-        var requestConfig = createConfigForUnfollowRequest();
+    @Nested
+    class FailureCases {
+        @Test
+        void shouldFollow() throws Exception {
+            testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
+            var requestConfig = createConfigForFollowRequest();
 
-        testControllerUtil.expectStatusFromPerformedRequest(requestConfig, OK);
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
 
-        boolean followed = testFollowUtil.isFollowed(followee.id(), profile.id());
-        assertThat(followed).isFalse();
-    }
+            assertThat(json).contains(ALREADY_FOLLOWING.formatWith(followee.id(), profile.id()));
+        }
 
-    @Test
-    void isFollowedTest() throws Exception {
-        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
-        var requestConfig = createConfigForIsFollowedRequest();
+        @Test
+        void shouldUnfollow() throws Exception {
+            var requestConfig = createConfigForUnfollowRequest();
 
-        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
+            String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);
 
-        Boolean followed = GSON.fromJson(json, Boolean.class);
-        assertThat(followed).isTrue();
-    }
-
-    @Test
-    void getFollowersTest() throws Exception {
-        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
-        profile = updateProfileById(profile.id());
-        var requestConfig = createConfigForGetFollowersRequest();
-
-        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
-
-        PageResponse<ProfileResponse> followers = GSON.fromJson(json, new TypeToken<>() {
-        });
-        assertThat(followers.getContent()).containsExactly(profile);
-    }
-
-    @Test
-    void getFolloweesTest() throws Exception {
-        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
-        followee = updateProfileById(followee.id());
-        var requestConfig = createConfigForGetFolloweesRequest();
-
-        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
-
-        PageResponse<ProfileResponse> followees = GSON.fromJson(json, new TypeToken<>() {
-        });
-        assertThat(followees.getContent()).containsExactly(followee);
-    }
-
-    @Test
-    void getFolloweesCelebritiesTest() throws Exception {
-        followee = createCelebrity();
-        testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
-        followee = updateProfileById(followee.id());
-        var requestConfig = createConfigForGetFolloweesCelebritiesRequest();
-
-        String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, OK);
-
-        PageResponse<ProfileResponse> followeesCelebrities = GSON.fromJson(json, new TypeToken<>() {
-        });
-        assertThat(followeesCelebrities.getContent()).containsExactly(followee);
+            assertThat(json).contains(NOT_FOLLOWING.formatWith(followee.id(), profile.id()));
+        }
     }
 
     private RequestConfig<Void> createConfigForFollowRequest() {

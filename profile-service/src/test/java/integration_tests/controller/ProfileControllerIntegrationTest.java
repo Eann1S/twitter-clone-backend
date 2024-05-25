@@ -6,13 +6,14 @@ import com.example.profile.dto.request.UpdateProfileRequest;
 import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
 import com.example.profile.entity.Profile;
+import com.example.utils.test.RequestConfig;
+import com.example.utils.test.TestControllerUtil;
 import com.google.gson.reflect.TypeToken;
 import org.instancio.Instancio;
 import org.instancio.generators.Generators;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,13 +21,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.Cache;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import test_util.RequestConfig;
-import test_util.TestControllerUtil;
 import test_util.TestProfileUtil;
 import test_util.config.TestValidatorConfig;
 import test_util.starter.AllServicesStarter;
@@ -34,8 +32,8 @@ import test_util.starter.AllServicesStarter;
 import java.util.List;
 import java.util.Locale;
 
-import static com.example.profile.config.gson.GsonConfig.GSON;
 import static com.example.profile.message.ErrorMessage.ENTITY_NOT_FOUND;
+import static com.example.utils.config.gson.GsonConfig.GSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.instancio.Select.field;
 import static org.springframework.http.HttpStatus.*;
@@ -47,7 +45,7 @@ import static test_util.model.TestModels.VALID_UPDATE_REQUEST_MODEL;
         ProfileServiceApplication.class,
         TestValidatorConfig.class,
         TestProfileUtil.class,
-        TestControllerUtil.class
+        TestControllerUtil.class,
 })
 @ActiveProfiles("test")
 @Transactional(transactionManager = "mongoTransactionManager")
@@ -59,16 +57,8 @@ public class ProfileControllerIntegrationTest implements AllServicesStarter {
     @Autowired
     private TestProfileUtil testProfileUtil;
     @Autowired
-    @Qualifier("profiles")
-    private Cache cache;
-    @Autowired
     @Qualifier("test")
     private MessageSource messageSource;
-
-    @BeforeEach
-    public void setUp() {
-        cache.clear();
-    }
 
     @Nested
     class SuccessCases {

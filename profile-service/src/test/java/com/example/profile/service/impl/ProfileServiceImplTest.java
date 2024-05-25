@@ -1,5 +1,6 @@
 package com.example.profile.service.impl;
 
+import com.example.cache.service.CacheService;
 import com.example.profile.dto.request.CreateProfileRequest;
 import com.example.profile.dto.request.UpdateProfileRequest;
 import com.example.profile.dto.response.PageResponse;
@@ -9,7 +10,6 @@ import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.PageMapper;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
-import com.example.profile.service.CacheService;
 import org.instancio.junit.InstancioExtension;
 import org.instancio.junit.InstancioSource;
 import org.junit.jupiter.api.BeforeEach;

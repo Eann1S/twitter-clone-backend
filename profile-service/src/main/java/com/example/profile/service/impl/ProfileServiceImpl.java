@@ -1,5 +1,6 @@
 package com.example.profile.service.impl;
 
+import com.example.cache.service.CacheService;
 import com.example.profile.dto.request.CreateProfileRequest;
 import com.example.profile.dto.request.UpdateProfileRequest;
 import com.example.profile.dto.response.PageResponse;
@@ -9,12 +10,13 @@ import com.example.profile.exception.EntityNotFoundException;
 import com.example.profile.mapper.PageMapper;
 import com.example.profile.mapper.ProfileMapper;
 import com.example.profile.repository.ProfileRepository;
-import com.example.profile.service.CacheService;
 import com.example.profile.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class ProfileServiceImpl implements ProfileService {
 

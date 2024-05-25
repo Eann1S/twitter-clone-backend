@@ -4,6 +4,8 @@ import com.example.profile.ProfileServiceApplication;
 import com.example.profile.config.service.FollowServiceConfig;
 import com.example.profile.dto.response.PageResponse;
 import com.example.profile.dto.response.ProfileResponse;
+import com.example.utils.test.RequestConfig;
+import com.example.utils.test.TestControllerUtil;
 import com.google.gson.reflect.TypeToken;
 import org.instancio.junit.InstancioExtension;
 import org.jetbrains.annotations.NotNull;
@@ -16,15 +18,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import test_util.RequestConfig;
-import test_util.TestControllerUtil;
 import test_util.TestFollowUtil;
 import test_util.TestProfileUtil;
 import test_util.starter.AllServicesStarter;
 
-import static com.example.profile.config.gson.GsonConfig.GSON;
 import static com.example.profile.message.ErrorMessage.ALREADY_FOLLOWING;
 import static com.example.profile.message.ErrorMessage.NOT_FOLLOWING;
+import static com.example.utils.config.gson.GsonConfig.GSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
@@ -83,7 +83,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         }
 
         @Test
-        void isFollowedTest() throws Exception {
+        void shouldReturnTrue_whenFollowing() throws Exception {
             testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
             var requestConfig = createConfigForIsFollowedRequest();
 
@@ -94,7 +94,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         }
 
         @Test
-        void getFollowersTest() throws Exception {
+        void shouldReturnFollowers() throws Exception {
             testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
             profile = updateProfileById(profile.id());
             var requestConfig = createConfigForGetFollowersRequest();
@@ -107,7 +107,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         }
 
         @Test
-        void getFolloweesTest() throws Exception {
+        void shouldReturnFollowees() throws Exception {
             testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
             followee = updateProfileById(followee.id());
             var requestConfig = createConfigForGetFolloweesRequest();
@@ -120,7 +120,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         }
 
         @Test
-        void getFolloweesCelebritiesTest() throws Exception {
+        void shouldReturnFolloweesCelebrities() throws Exception {
             followee = createCelebrity();
             testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
             followee = updateProfileById(followee.id());
@@ -137,7 +137,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
     @Nested
     class FailureCases {
         @Test
-        void shouldFollow() throws Exception {
+        void shouldNotFollow_whenProfileIsAlreadyFollowingAnotherOne() throws Exception {
             testFollowUtil.followOneProfileToAnother(followee.id(), profile.id());
             var requestConfig = createConfigForFollowRequest();
 
@@ -147,7 +147,7 @@ public class FollowControllerIntegrationTest implements AllServicesStarter {
         }
 
         @Test
-        void shouldUnfollow() throws Exception {
+        void shouldNotUnfollow_whenProfileIsNotFollowingAnotherOne() throws Exception {
             var requestConfig = createConfigForUnfollowRequest();
 
             String json = testControllerUtil.getJsonResponseFromPerformedRequestWithExpectedStatus(requestConfig, BAD_REQUEST);

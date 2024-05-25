@@ -12,7 +12,7 @@ public interface ConfigServerStarter {
 
     @Container
     @SuppressWarnings({"resource", "deprecation"})
-    GenericContainer<?> configServer = new GenericContainer<>(DockerImageName.parse("twitterclone0/twitter-spring-cloud-config-server:latest"))
+    GenericContainer<?> CONFIG_SERVER = new GenericContainer<>(DockerImageName.parse("twitterclone0/twitter-spring-cloud-config-server:latest"))
             .withExposedPorts(8888)
             .withFileSystemBind("C://Users/123/Desktop/code_java/microservices-config-server", "/config-repo")
             .withEnv("SPRING_PROFILES_ACTIVE", "native")
@@ -21,6 +21,6 @@ public interface ConfigServerStarter {
 
     @BeforeAll
     static void setEnvironmentVariables() {
-        System.setProperty("CONFIG_SERVER_URL", configServer.getHost() + ":" + configServer.getFirstMappedPort());
+        System.setProperty("CONFIG_SERVER_URL", CONFIG_SERVER.getHost() + ":" + CONFIG_SERVER.getFirstMappedPort());
     }
 }

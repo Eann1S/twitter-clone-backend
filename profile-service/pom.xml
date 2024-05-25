@@ -19,11 +19,18 @@
     </properties>
 
     <dependencies>
-        <!-- *** Config Processor *** -->
+        <!-- *** UTILS *** -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
+            <groupId>com.example</groupId>
+            <artifactId>utils-lib</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- *** CACHE *** -->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>cache-lib</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- *** REDIS *** -->
@@ -35,6 +42,13 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
+        </dependency>
+
+        <!-- *** Config Processor *** -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- *** WEB *** -->

@@ -1,4 +1,4 @@
-package test_util;
+package com.example.utils.test;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;

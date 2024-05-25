@@ -1,4 +1,4 @@
-package com.example.profile.config.gson;
+package com.example.utils.config.gson;
 
 import com.google.gson.*;
 import lombok.NoArgsConstructor;

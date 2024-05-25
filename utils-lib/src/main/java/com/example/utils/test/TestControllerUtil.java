@@ -1,4 +1,4 @@
-package test_util;
+package com.example.utils.test;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.function.Consumer;
 
-import static com.example.profile.config.gson.GsonConfig.GSON;
+import static com.example.utils.config.gson.GsonConfig.GSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

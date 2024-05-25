@@ -37,7 +37,7 @@
 
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <jib.version>3.4.1</jib.version>
-        <testcontainers.version>1.19.7</testcontainers.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
         <spring.dotenv.version>3.0.0</spring.dotenv.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <swagger.version>2.0.4</swagger.version>
